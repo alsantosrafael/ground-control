@@ -1,6 +1,6 @@
 package com.platform.groundcontrol.infrastructure.repositories
 
-import com.platform.groundcontrol.infrastructure.entities.FeatureFlagEntity
+import com.platform.groundcontrol.domain.entities.FeatureFlagEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 import java.util.UUID

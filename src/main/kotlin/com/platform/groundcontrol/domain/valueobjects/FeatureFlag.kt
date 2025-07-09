@@ -67,10 +67,34 @@ class FeatureFlag(
         }
     }
 
-    fun updateDetails(newName: FeatureFlagName, newDescription: String?) {
-        if (newName != name || newDescription != description) {
-            this.name = newName
+    fun updateDetails(newName: String?, newCode: String?, newDescription: String?, newDueAt: Instant?) {
+        var hasChanges = false
+
+        newName?.let {
+            if (it != name.value) {
+                this.name = FeatureFlagName(it)
+                hasChanges = true
+            }
+        }
+
+        newCode?.let {
+            if ( it != code.value) {
+                this.code = FeatureFlagCode(it)
+                hasChanges  = true
+            }
+        }
+
+        if (newDescription != this.description) {
             this.description = newDescription
+            hasChanges = true
+        }
+
+        if (newDueAt != this.dueAt) {
+            this.dueAt = newDueAt
+            hasChanges = true
+        }
+
+        if (hasChanges) {
             this.updatedAt = Instant.now()
         }
     }

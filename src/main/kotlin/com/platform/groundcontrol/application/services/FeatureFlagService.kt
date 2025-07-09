@@ -7,6 +7,9 @@ import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagCode
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagId
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagName
+import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
+import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
+import com.platform.groundcontrol.domain.valueobjects.updateWith
 import com.platform.groundcontrol.infrastructure.repositories.FeatureFlagJpaRepository
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -38,4 +41,30 @@ class FeatureFlagService(
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
         return flag.toDomain()
     }
+
+    fun update(code: String, request: UpdateFeatureFlag): Unit {
+        val flag = featureFlagRepository.findByCode(code)?.toDomain()
+            ?: throw NoSuchElementException("Feature flag with code '$code' not found")
+        flag.updateWith{
+            withName(request.name)
+            withCode(request.code)
+            withDescription(request.description)
+            withDueAt(request.dueAt)
+        }
+        featureFlagRepository.save(flag.toEntity())
+    }
+
+    fun updateFeatureFlagStatus(code: String, request: UpdateFeatureFlagState) {
+        val flag = featureFlagRepository.findByCode(code)?.toDomain()
+            ?: throw NoSuchElementException("Feature flag with code '$code' not found")
+
+        if (request.isEnabled) {
+            flag.enable()
+        } else {
+            flag.disable()
+        }
+
+        featureFlagRepository.save(flag.toEntity())
+    }
+
 }

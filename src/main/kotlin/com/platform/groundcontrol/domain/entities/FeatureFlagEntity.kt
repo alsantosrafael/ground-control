@@ -1,9 +1,5 @@
-package com.platform.groundcontrol.infrastructure.entities
+package com.platform.groundcontrol.domain.entities
 
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagCode
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagId
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagName
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
