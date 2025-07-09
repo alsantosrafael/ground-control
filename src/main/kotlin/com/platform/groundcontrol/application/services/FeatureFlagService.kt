@@ -28,8 +28,14 @@ class FeatureFlagService(
         return createdFF.toDomain()
     }
 
-    fun fetchAll(): List<FeatureFlag> {
+    fun getAll(): List<FeatureFlag> {
         val list = featureFlagRepository.findAll()
         return list.map { it.toDomain() }
+    }
+
+    fun getByCode(code: String): FeatureFlag {
+        val flag = featureFlagRepository.findByCode(code)
+            ?: throw NoSuchElementException("Feature flag with code '$code' not found")
+        return flag.toDomain()
     }
 }

@@ -5,6 +5,7 @@ import com.platform.groundcontrol.domain.valueobjects.CreateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -28,6 +29,13 @@ class FeatureFlagController(
     fun fetchAll(): ResponseEntity<List<FeatureFlag>> {
         return ResponseEntity
             .ok()
-            .body(featureFlagService.fetchAll())
+            .body(featureFlagService.getAll())
+    }
+
+    @GetMapping("/{code}")
+    fun fetchByCode(@PathVariable("code") code: String): ResponseEntity<FeatureFlag> {
+        return ResponseEntity
+            .ok()
+            .body(featureFlagService.getByCode(code))
     }
 }
