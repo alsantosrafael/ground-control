@@ -63,32 +63,6 @@ class FeatureFlagEntity(
     override fun hashCode(): Int {
         return code.hashCode()
     }
-
 }
 
-fun FeatureFlagEntity.toDomain(): FeatureFlag {
-    return FeatureFlag(
-        id = FeatureFlagId(this.id!!),
-        code = FeatureFlagCode(this.name),
-        name = FeatureFlagName(this.name),
-        description = this.description,
-        initialEnabled = this.isEnabled,
-        dueAt = this.dueAt
-    ).apply {
 
-        if (this@toDomain.previousEnabledState != null &&
-            this@toDomain.previousEnabledState != this@toDomain.isEnabled) {
-
-            this.previousEnabledState = this@toDomain.previousEnabledState!!
-
-            // Then apply the current state
-            if (this@toDomain.isEnabled) {
-                this.enable()
-            } else {
-                this.disable()
-            }
-        }
-
-        this.updatedAt = this@toDomain.updatedAt
-    }
-}

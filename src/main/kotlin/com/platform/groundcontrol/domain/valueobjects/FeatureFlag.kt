@@ -1,6 +1,5 @@
 package com.platform.groundcontrol.domain.valueobjects
 
-import com.platform.groundcontrol.infrastructure.entities.FeatureFlagEntity
 import java.time.Instant
 import java.util.UUID
 
@@ -78,18 +77,4 @@ class FeatureFlag(
 
     fun isExpired(now: Instant = Instant.now()): Boolean =
         dueAt?.isBefore(now) ?: false
-}
-
-fun FeatureFlag.toEntity(): FeatureFlagEntity {
-    return FeatureFlagEntity(
-        id = this.id.value,
-        code = this.code.value,
-        name = this.name.value,
-        description = this.description,
-        isEnabled = this.isEnabled,
-        previousEnabledState = this.previousEnabledState,
-        createdAt = this.createdAt,
-        updatedAt = this.updatedAt,
-        dueAt = this.dueAt
-    )
 }

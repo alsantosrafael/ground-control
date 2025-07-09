@@ -8,5 +8,4 @@ data class CreateFeatureFlag(
     val description: String? = null,
     val isEnabled: Boolean,
     val dueAt: Instant? = null
-) {
-}
+) {}
