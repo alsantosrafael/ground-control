@@ -8,4 +8,5 @@ import java.util.UUID
 @Repository
 interface FeatureFlagJpaRepository : JpaRepository<FeatureFlagEntity, UUID> {
     fun findByCode(code: String): FeatureFlagEntity?
+    fun findByCodeIn(codes: List<String>): List<FeatureFlagEntity>
 }

@@ -7,6 +7,7 @@ import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagCode
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagId
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagName
+import com.platform.groundcontrol.domain.valueobjects.FindByCodes
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
 import com.platform.groundcontrol.domain.valueobjects.updateWith
@@ -34,6 +35,13 @@ class FeatureFlagService(
     fun getAll(): List<FeatureFlag> {
         val list = featureFlagRepository.findAll()
         return list.map { it.toDomain() }
+    }
+
+    fun getAllByCodes(codes: List<String>): FindByCodes {
+        val featureFlags =  featureFlagRepository.findByCodeIn(codes);
+        val foundCodes = featureFlags.map { it.code }
+        val notFoundCodes = codes.filterNot { it in foundCodes }
+        return FindByCodes(featureFlags.map { it.toDomain() }, notFoundCodes)
     }
 
     fun getByCode(code: String): FeatureFlag {

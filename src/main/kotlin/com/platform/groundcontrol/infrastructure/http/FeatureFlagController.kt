@@ -3,6 +3,7 @@ package com.platform.groundcontrol.infrastructure.http
 import com.platform.groundcontrol.application.services.FeatureFlagService
 import com.platform.groundcontrol.domain.valueobjects.CreateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
+import com.platform.groundcontrol.domain.valueobjects.FindByCodes
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
 import org.springframework.http.ResponseEntity
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
@@ -27,6 +29,13 @@ class FeatureFlagController(
         return ResponseEntity
             .created(URI("/flags"))
             .body(featureFlagService.create(request))
+    }
+
+
+    @GetMapping("/by-codes")
+    fun fetchAllByCodes(@RequestParam codes: List<String>): ResponseEntity<FindByCodes> {
+        return ResponseEntity
+            .ok(featureFlagService.getAllByCodes(codes))
     }
 
     @GetMapping
