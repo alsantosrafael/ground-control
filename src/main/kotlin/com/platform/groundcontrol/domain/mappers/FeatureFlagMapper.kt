@@ -14,21 +14,11 @@ object FeatureFlagMapper {
             code = FeatureFlagCode(this.code),
             name = FeatureFlagName(this.name),
             description = this.description,
-            initialEnabled = this.isEnabled,
+            initialEnabled = this.enabled,
             dueAt = this.dueAt
         ).apply {
 
-            if (this@toDomain.previousEnabledState != null &&
-                this@toDomain.previousEnabledState != this@toDomain.isEnabled) {
 
-                this.previousEnabledState = this@toDomain.previousEnabledState!!
-
-                if (this@toDomain.isEnabled) {
-                    this.enable()
-                } else {
-                    this.disable()
-                }
-            }
 
             this.updatedAt = this@toDomain.updatedAt
         }
@@ -40,8 +30,7 @@ object FeatureFlagMapper {
             code = this.code.value,
             name = this.name.value,
             description = this.description,
-            isEnabled = this.isEnabled,
-            previousEnabledState = this.previousEnabledState,
+            enabled = this.enabled,
             createdAt = this.createdAt,
             updatedAt = this.updatedAt,
             dueAt = this.dueAt

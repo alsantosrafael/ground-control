@@ -13,7 +13,6 @@ import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
 import com.platform.groundcontrol.domain.valueobjects.updateWith
 import com.platform.groundcontrol.infrastructure.repositories.FeatureFlagJpaRepository
 import org.springframework.stereotype.Service
-import java.util.UUID
 
 @Service
 class FeatureFlagService(
@@ -21,11 +20,11 @@ class FeatureFlagService(
 ) {
     fun create(request: CreateFeatureFlag): FeatureFlag {
         val ff = FeatureFlag(
-            FeatureFlagId(null as UUID?),
+            FeatureFlagId(null as Long?),
             FeatureFlagCode(request.code),
             FeatureFlagName(request.name),
             request.description,
-            request.isEnabled,
+            request.enabled,
             request.dueAt
         )
         val createdFF = featureFlagRepository.save(ff.toEntity())

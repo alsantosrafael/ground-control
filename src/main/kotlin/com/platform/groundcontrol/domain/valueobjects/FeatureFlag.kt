@@ -4,7 +4,7 @@ import java.time.Instant
 import java.util.UUID
 
 @JvmInline
-value class FeatureFlagId(val value: UUID?) {}
+value class FeatureFlagId(val value: Long?) {}
 
 @JvmInline
 value class FeatureFlagCode(val value: String) {
@@ -39,10 +39,9 @@ class FeatureFlag(
     var description: String? = description
         private set
 
-    var isEnabled: Boolean = initialEnabled
+    var enabled: Boolean = initialEnabled
         private set
 
-    var previousEnabledState: Boolean = initialEnabled
 
     var createdAt: Instant = Instant.now()
 
@@ -52,17 +51,15 @@ class FeatureFlag(
         private set
 
     fun enable() {
-        if (!isEnabled) {
-            previousEnabledState = isEnabled
-            isEnabled = true
+        if (!enabled) {
+            enabled = true
             updatedAt = Instant.now()
         }
     }
 
     fun disable() {
-        if (isEnabled) {
-            previousEnabledState = isEnabled
-            isEnabled = false
+        if (enabled) {
+            enabled = false
             updatedAt = Instant.now()
         }
     }

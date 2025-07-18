@@ -1,41 +1,75 @@
 package com.platform.groundcontrol.domain.entities
 
+import com.platform.groundcontrol.domain.enums.FlagType
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import java.time.Instant
-import java.util.UUID
 
 @Entity
 @Table(name = "FEATURE_FLAG")
 class FeatureFlagEntity(
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    var id: UUID? = null,
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long? = null,
+
     @Column(nullable = false, unique = true)
     var code: String = "",
+
     @Column(nullable = false, unique = true)
     var name: String = "",
+
     @Column(nullable = true)
     var description: String? = null,
+
     @Column(nullable = false)
-    var isEnabled: Boolean = false,
-    @Column(nullable = true)
-    var previousEnabledState: Boolean? = null,
+    var enabled: Boolean = false,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "flag_type", nullable = false)
+    val flagType: FlagType? = FlagType.BOOLEAN,
+
+    @Column(name = "default_bool_value")
+    val defaultBoolValue: Boolean? = null,
+
+    @Column(name = "default_int_value")
+    val defaultIntValue: Int? = null,
+
+    @Column(name = "default_string_value")
+    val defaultStringValue: String? = null,
+
+    @Column(name = "default_percentage_value")
+    val defaultPercentageValue: Double? = null,
+
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(updatable = false, name = "created_at")
     var createdAt: Instant = Instant.now(),
+
     @UpdateTimestamp
+    @Column(name = "updated_at")
     var updatedAt: Instant = Instant.now(),
-    @Column(nullable = true)
-    var dueAt: Instant? = null
+
+    @Column(nullable = true, name = "due_at")
+    var dueAt: Instant? = null,
+
+    @OneToMany(mappedBy = "featureFlag", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
+    @Column(name="rollout_rules")
+    val rolloutRules: List<RolloutRuleEntity> = emptyList()
 ) {
 
+    override fun hashCode(): Int {
+        return code.hashCode()
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -43,21 +77,21 @@ class FeatureFlagEntity(
 
         other as FeatureFlagEntity
 
-        if (isEnabled != other.isEnabled) return false
-        if (previousEnabledState != other.previousEnabledState) return false
+        if (enabled != other.enabled) return false
+        if (defaultBoolValue != other.defaultBoolValue) return false
+        if (defaultIntValue != other.defaultIntValue) return false
+        if (defaultPercentageValue != other.defaultPercentageValue) return false
         if (id != other.id) return false
-        if (name != other.name) return false
         if (code != other.code) return false
+        if (name != other.name) return false
         if (description != other.description) return false
+        if (flagType != other.flagType) return false
+        if (defaultStringValue != other.defaultStringValue) return false
         if (createdAt != other.createdAt) return false
         if (updatedAt != other.updatedAt) return false
         if (dueAt != other.dueAt) return false
 
         return true
-    }
-
-    override fun hashCode(): Int {
-        return code.hashCode()
     }
 }
 
