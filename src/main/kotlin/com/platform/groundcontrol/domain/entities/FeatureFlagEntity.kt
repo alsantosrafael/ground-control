@@ -37,19 +37,19 @@ class FeatureFlagEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "flag_type", nullable = false)
-    val flagType: FlagType? = FlagType.BOOLEAN,
+    var flagType: FlagType? = FlagType.BOOLEAN,
 
     @Column(name = "default_bool_value")
-    val defaultBoolValue: Boolean? = null,
+    var defaultBoolValue: Boolean? = null,
 
     @Column(name = "default_int_value")
-    val defaultIntValue: Int? = null,
+    var defaultIntValue: Int? = null,
 
     @Column(name = "default_string_value")
-    val defaultStringValue: String? = null,
+    var defaultStringValue: String? = null,
 
     @Column(name = "default_percentage_value")
-    val defaultPercentageValue: Double? = null,
+    var defaultPercentageValue: Double? = null,
 
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")
@@ -62,9 +62,8 @@ class FeatureFlagEntity(
     @Column(nullable = true, name = "due_at")
     var dueAt: Instant? = null,
 
-    @OneToMany(mappedBy = "featureFlag", cascade = [CascadeType.ALL], fetch = FetchType.LAZY)
-    @Column(name="rollout_rules")
-    val rolloutRules: List<RolloutRuleEntity> = emptyList()
+    @OneToMany(mappedBy = "featureFlag", cascade = [CascadeType.ALL], fetch = FetchType.LAZY, orphanRemoval = true)
+    var rolloutRules: MutableList<RolloutRuleEntity> = mutableListOf() // var because JPA needs to set the list and update it
 ) {
 
     override fun hashCode(): Int {

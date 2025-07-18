@@ -9,6 +9,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
 import java.time.Instant
 import java.util.UUID
 
@@ -17,44 +19,55 @@ import java.util.UUID
 class RolloutRuleEntity (
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    val id: UUID? = null,
+    var id: UUID? = null,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "feature_flag_id", nullable = false)
-    val featureFlag: FeatureFlagEntity? = null,
+    var featureFlag: FeatureFlagEntity? = null,
 
     @Column(name = "attribute_key")
-    val attributeKey: String? = null,
+    var attributeKey: String? = null,
 
     @Column(name = "attribute_value")
-    val attributeValue: String? = null,
+    var attributeValue: String? = null,
 
-    val percentage: Double? = null,
+    var percentage: Double? = null,
 
     @Column(name = "distribution_key_attribute")
-    val distributionKeyAttribute: String? = null,
+    var distributionKeyAttribute: String? = null,
 
     @Column(name = "value_bool")
-    val valueBool: Boolean? = null,
+    var valueBool: Boolean? = null,
 
     @Column(name = "value_string")
-    val valueString: String? = null,
+    var valueString: String? = null,
 
     @Column(name = "value_int")
-    val valueInt: Int? = null,
+    var valueInt: Int? = null,
+
+    @Column(name = "value_percentage")
+    var valuePercentage: Double? = null,
 
     @Column(name = "variant_name")
-    val variantName: String? = null,
+    var variantName: String? = null,
 
     @Column(name = "start_at")
-    val startAt: Instant? = null,
+    var startAt: Instant? = null,
 
     @Column(name = "end_at")
-    val endAt: Instant? = null,
+    var endAt: Instant? = null,
 
     @Column(name = "priority", nullable = false)
-    val priority: Int = 0,
+    var priority: Int = 0,
 
     @Column(name = "active", nullable = false)
-    val active: Boolean = true
+    var active: Boolean = true,
+
+    @CreationTimestamp
+    @Column(updatable = false, name = "created_at")
+    var createdAt: Instant = Instant.now(),
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    var updatedAt: Instant = Instant.now(),
 ) {}

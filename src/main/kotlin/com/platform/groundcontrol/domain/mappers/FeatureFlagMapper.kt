@@ -5,6 +5,9 @@ import com.platform.groundcontrol.domain.valueobjects.FeatureFlagCode
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagId
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlagName
 import com.platform.groundcontrol.domain.entities.FeatureFlagEntity
+import com.platform.groundcontrol.domain.enums.FlagType
+import com.platform.groundcontrol.domain.mappers.RolloutRuleMapper.toDomain
+import com.platform.groundcontrol.domain.mappers.RolloutRuleMapper.toEntity
 
 object FeatureFlagMapper {
 
@@ -14,26 +17,42 @@ object FeatureFlagMapper {
             code = FeatureFlagCode(this.code),
             name = FeatureFlagName(this.name),
             description = this.description,
-            initialEnabled = this.enabled,
-            dueAt = this.dueAt
-        ).apply {
-
-
-
-            this.updatedAt = this@toDomain.updatedAt
-        }
+            value = when(this.flagType) {
+                FlagType.INT -> this.defaultIntValue
+                FlagType.STRING -> this.defaultStringValue
+                FlagType.PERCENTAGE -> this.defaultPercentageValue
+                FlagType.BOOLEAN -> this.defaultBoolValue
+                else -> throw RuntimeException("Something went wrong")
+            },
+            valueType = this.flagType ?: throw RuntimeException("FlagType is null"),
+            enabled = this.enabled,
+            dueAt = this.dueAt,
+            rolloutRules = this.rolloutRules.map { it.toDomain() }.toMutableList()
+        )
     }
 
     fun FeatureFlag.toEntity(): FeatureFlagEntity {
-        return FeatureFlagEntity(
+        val entity = FeatureFlagEntity(
             id = this.id.value,
             code = this.code.value,
             name = this.name.value,
             description = this.description,
             enabled = this.enabled,
+            flagType = this.valueType,
+            defaultBoolValue = if (this.valueType == FlagType.BOOLEAN) this.value as? Boolean else null,
+            defaultIntValue = if (this.valueType == FlagType.INT) this.value as? Int else null,
+            defaultStringValue = if (this.valueType == FlagType.STRING) this.value as? String else null,
+            defaultPercentageValue = if (this.valueType == FlagType.PERCENTAGE) this.value as? Double else null,
             createdAt = this.createdAt,
             updatedAt = this.updatedAt,
             dueAt = this.dueAt
         )
+        val rolloutEntities = this.rolloutRules.map { rule ->
+            val ruleEntity = rule.toEntity()
+            ruleEntity.featureFlag = entity
+            ruleEntity
+        }
+        entity.rolloutRules.addAll(rolloutEntities)
+        return entity
     }
 }

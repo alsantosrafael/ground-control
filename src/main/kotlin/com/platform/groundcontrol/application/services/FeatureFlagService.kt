@@ -24,6 +24,8 @@ class FeatureFlagService(
             FeatureFlagCode(request.code),
             FeatureFlagName(request.name),
             request.description,
+            request.value,
+            request.valueType,
             request.enabled,
             request.dueAt
         )

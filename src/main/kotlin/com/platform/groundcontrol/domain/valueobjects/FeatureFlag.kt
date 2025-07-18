@@ -1,7 +1,7 @@
 package com.platform.groundcontrol.domain.valueobjects
 
+import com.platform.groundcontrol.domain.enums.FlagType
 import java.time.Instant
-import java.util.UUID
 
 @JvmInline
 value class FeatureFlagId(val value: Long?) {}
@@ -27,8 +27,11 @@ class FeatureFlag(
     code: FeatureFlagCode,
     name: FeatureFlagName,
     description: String?,
-    initialEnabled: Boolean,
-    dueAt: Instant? = null
+    value: Any?,
+    valueType: FlagType,
+    enabled: Boolean,
+    dueAt: Instant? = null,
+    val rolloutRules: MutableList<RolloutRule> = mutableListOf()
 ) {
     var name: FeatureFlagName = name
         private set
@@ -39,9 +42,14 @@ class FeatureFlag(
     var description: String? = description
         private set
 
-    var enabled: Boolean = initialEnabled
+    var value: Any? = value
         private set
 
+    var valueType: FlagType = valueType
+        private set
+
+    var enabled: Boolean = enabled
+        private set
 
     var createdAt: Instant = Instant.now()
 
@@ -51,15 +59,15 @@ class FeatureFlag(
         private set
 
     fun enable() {
-        if (!enabled) {
-            enabled = true
+        if (!this@FeatureFlag.enabled) {
+            this@FeatureFlag.enabled = true
             updatedAt = Instant.now()
         }
     }
 
     fun disable() {
-        if (enabled) {
-            enabled = false
+        if (this@FeatureFlag.enabled) {
+            this@FeatureFlag.enabled = false
             updatedAt = Instant.now()
         }
     }
@@ -98,4 +106,14 @@ class FeatureFlag(
 
     fun isExpired(now: Instant = Instant.now()): Boolean =
         dueAt?.isBefore(now) ?: false
+
+    fun addRolloutRule(rolloutRule: RolloutRule) {
+        this.rolloutRules.add(rolloutRule)
+        updatedAt = Instant.now()
+    }
+
+    fun removeRolloutRule(rolloutRule: RolloutRule) {
+        this.rolloutRules.remove(rolloutRule)
+        updatedAt = Instant.now()
+    }
 }
