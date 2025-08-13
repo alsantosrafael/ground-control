@@ -11,12 +11,12 @@ import com.platform.groundcontrol.domain.valueobjects.FindByCodes
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
 import com.platform.groundcontrol.domain.valueobjects.updateWith
-import com.platform.groundcontrol.infrastructure.repositories.FeatureFlagJpaRepository
+import com.platform.groundcontrol.infrastructure.repositories.FeatureFlagRepository
 import org.springframework.stereotype.Service
 
 @Service
 class FeatureFlagService(
-    val featureFlagRepository: FeatureFlagJpaRepository
+    val featureFlagRepository: FeatureFlagRepository
 ) {
     fun create(request: CreateFeatureFlag): FeatureFlag {
         val ff = FeatureFlag(
@@ -34,19 +34,19 @@ class FeatureFlagService(
     }
 
     fun getAll(): List<FeatureFlag> {
-        val list = featureFlagRepository.findAll()
+        val list = featureFlagRepository.findAllWithRules()
         return list.map { it.toDomain() }
     }
 
     fun getAllByCodes(codes: List<String>): FindByCodes {
-        val featureFlags =  featureFlagRepository.findByCodeIn(codes);
+        val featureFlags =  featureFlagRepository.findByCodeInWithRules(codes);
         val foundCodes = featureFlags.map { it.code }
         val notFoundCodes = codes.filterNot { it in foundCodes }
         return FindByCodes(featureFlags.map { it.toDomain() }, notFoundCodes)
     }
 
     fun getByCode(code: String): FeatureFlag {
-        val flag = featureFlagRepository.findByCode(code)
+        val flag = featureFlagRepository.findByCodeWithRules(code)
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
         return flag.toDomain()
     }
