@@ -31,14 +31,42 @@ print_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
+# Check if services are already running
+check_services() {
+    print_status "Checking if services are already running..."
+    
+    local services_up=0
+    local required_services=("groundcontrol-postgres" "groundcontrol" "prometheus")
+    
+    # Check if required containers are running
+    for service in "${required_services[@]}"; do
+        if docker ps --format "table {{.Names}}" | grep -q "^${service}$"; then
+            services_up=$((services_up + 1))
+        fi
+    done
+    
+    if [ $services_up -eq ${#required_services[@]} ]; then
+        print_success "All required services are already running"
+        
+        # Check if application is responding
+        if curl -s "$BASE_URL/flags" > /dev/null 2>&1; then
+            print_success "Application is responding"
+            return 0
+        else
+            print_warning "Application containers are up but not responding"
+            return 1
+        fi
+    else
+        print_status "Found $services_up/${#required_services[@]} services running"
+        return 1
+    fi
+}
+
 # Start the application stack
 start_application() {
     print_status "Starting Ground Control with docker-compose..."
     
-    # Stop any existing containers
-    docker-compose down > /dev/null 2>&1
-    
-    # Start the full stack
+    # Start the full stack (only starts services that aren't running)
     docker-compose up -d
     
     if [ $? -eq 0 ]; then
@@ -48,16 +76,17 @@ start_application() {
         print_status "Waiting for application to be ready..."
         local retries=60
         while [ $retries -gt 0 ]; do
-            if curl -s "$BASE_URL/actuator/health" > /dev/null 2>&1; then
+            if curl -s "$BASE_URL/flags" > /dev/null 2>&1; then
                 print_success "Application is ready"
                 # Additional wait to ensure full readiness
-                sleep 5
+                sleep 3
                 return 0
             fi
             sleep 3
             retries=$((retries-1))
             printf "."
         done
+        echo # New line after dots
         
         print_error "Application failed to start within 180 seconds"
         return 1
@@ -316,9 +345,14 @@ main() {
         exit 1
     fi
     
-    # Start application stack
-    if ! start_application; then
-        exit 1
+    # Check if services are already running
+    if check_services; then
+        print_success "Services are ready, skipping startup"
+    else
+        # Start application stack if not running
+        if ! start_application; then
+            exit 1
+        fi
     fi
     
     echo
