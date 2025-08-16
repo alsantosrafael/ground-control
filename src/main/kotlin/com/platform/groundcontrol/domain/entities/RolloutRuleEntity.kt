@@ -1,5 +1,6 @@
 package com.platform.groundcontrol.domain.entities
 
+import com.platform.groundcontrol.domain.valueobjects.Condition
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
@@ -9,6 +10,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import java.time.Instant
@@ -62,6 +65,10 @@ class RolloutRuleEntity (
 
     @Column(name = "active", nullable = false)
     var active: Boolean = true,
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "conditions")
+    var conditions: MutableList<Condition> = mutableListOf(),
 
     @CreationTimestamp
     @Column(updatable = false, name = "created_at")

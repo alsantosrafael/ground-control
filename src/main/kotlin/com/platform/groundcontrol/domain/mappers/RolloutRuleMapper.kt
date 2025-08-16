@@ -22,7 +22,8 @@ object RolloutRuleMapper {
             startAt = this.startAt,
             endAt = this.endAt,
             priority = this.priority,
-            active = this.active
+            active = this.active,
+            conditions = this.conditions
         )
 
     fun RolloutRule.toEntity(): RolloutRuleEntity =
@@ -41,6 +42,7 @@ object RolloutRuleMapper {
             startAt = this.startAt,
             endAt = this.endAt,
             priority = this.priority ?: 0,
-            active = this.active
+            active = this.active,
+            conditions = this.conditions
         )
 }
