@@ -2,26 +2,25 @@ package com.platform.groundcontrol.domain.valueobjects
 
 import com.platform.groundcontrol.domain.enums.EvaluationType
 import com.platform.groundcontrol.domain.enums.FlagType
-import java.time.Instant
+import com.platform.groundcontrol.domain.enums.Reason
 
 data class EvaluationContext(
-    val userId: String,
-    val attributes: Map<String, String> = emptyMap(),
-    val timestamp: Instant = Instant.now()
+    val subjectId: String,
+    val attributes: Map<String, Any> = emptyMap(),
 ){
     fun getDistributionKey(attributeName: String?): String {
         return when (attributeName) {
-            null -> userId
-            else -> attributes[attributeName] ?: userId
+            null -> subjectId
+            else -> attributes[attributeName]?.toString() ?: subjectId
         }
     }
 }
 
 data class EvaluationResult(
     val enabled: Boolean,
-    val value: Any,
-    val valueType: FlagType,
+    val value: Any?,
+    val valueType: FlagType? = null,
     val variant: String? = null,
     val evaluationType: EvaluationType? = EvaluationType.DEFAULT,
-    val reason: String? = "default"
+    val reason: Reason? = Reason.DEFAULT
 ) {}
