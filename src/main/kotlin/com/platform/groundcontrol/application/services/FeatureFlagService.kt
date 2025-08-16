@@ -12,12 +12,15 @@ import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
 import com.platform.groundcontrol.domain.valueobjects.updateWith
 import com.platform.groundcontrol.infrastructure.repositories.FeatureFlagRepository
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 @Service
 class FeatureFlagService(
     val featureFlagRepository: FeatureFlagRepository
 ) {
+    @CacheEvict(value = ["featureFlags"], allEntries = true)
     fun create(request: CreateFeatureFlag): FeatureFlag {
         val ff = FeatureFlag(
             FeatureFlagId(null as Long?),
@@ -33,6 +36,7 @@ class FeatureFlagService(
         return createdFF.toDomain()
     }
 
+    @Cacheable("featureFlags")
     fun getAll(): List<FeatureFlag> {
         val list = featureFlagRepository.findAllWithRules()
         return list.map { it.toDomain() }
@@ -45,12 +49,14 @@ class FeatureFlagService(
         return FindByCodes(featureFlags.map { it.toDomain() }, notFoundCodes)
     }
 
+    @Cacheable("featureFlagByCode", key = "#code")
     fun getByCode(code: String): FeatureFlag {
         val flag = featureFlagRepository.findByCodeWithRules(code)
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
         return flag.toDomain()
     }
 
+    @CacheEvict(value = ["featureFlags", "featureFlagByCode"], allEntries = true)
     fun update(code: String, request: UpdateFeatureFlag): Unit {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
@@ -63,6 +69,7 @@ class FeatureFlagService(
         featureFlagRepository.save(flag.toEntity())
     }
 
+    @CacheEvict(value = ["featureFlags", "featureFlagByCode"], allEntries = true)
     fun updateFeatureFlagStatus(code: String, request: UpdateFeatureFlagState) {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")

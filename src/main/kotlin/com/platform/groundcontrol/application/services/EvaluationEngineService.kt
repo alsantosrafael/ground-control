@@ -3,6 +3,7 @@ package com.platform.groundcontrol.application.services
 import com.platform.groundcontrol.domain.enums.Reason
 import com.platform.groundcontrol.domain.evaluators.ConditionEvaluator
 import com.platform.groundcontrol.domain.valueobjects.*
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.time.Instant
 import kotlin.math.abs
@@ -12,6 +13,7 @@ class EvaluationEngineService(
     private val conditionEvaluators: List<ConditionEvaluator>
 ) {
 
+    @Cacheable("evaluations", key = "#flag.code.value + ':' + #context.subjectId")
     fun evaluate(flag: FeatureFlag, context: EvaluationContext): EvaluationResult {
         if (!flag.enabled) {
             return EvaluationResult(
