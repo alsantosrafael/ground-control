@@ -7,6 +7,8 @@ const errorRate = new Rate('errors');
 const responseTime = new Trend('response_time', true);
 const flagCreations = new Counter('flag_creations');
 const flagReads = new Counter('flag_reads');
+const flagEvaluations = new Counter('flag_evaluations');
+const bulkEvaluations = new Counter('bulk_evaluations');
 
 // Test configuration
 export let options = {
@@ -22,6 +24,8 @@ export let options = {
     http_req_duration: ['p(95)<500'], // 95% of requests must be below 500ms
     http_req_failed: ['rate<0.01'],   // Error rate must be below 1%
     errors: ['rate<0.01'],            // Custom error rate below 1%
+    flag_evaluations: ['count>100'],  // At least 100 single evaluations
+    bulk_evaluations: ['count>20'],   // At least 20 bulk evaluations
   },
 };
 
@@ -83,14 +87,20 @@ export function setup() {
 export default function(data) {
   const testScenario = Math.random();
   
-  if (testScenario < 0.4) {
-    // 40% - Read all flags
+  if (testScenario < 0.25) {
+    // 25% - Evaluate single flag (NEW!)
+    evaluateFlag(data.testFlags);
+  } else if (testScenario < 0.35) {
+    // 10% - Bulk evaluate flags (NEW!)
+    bulkEvaluateFlags(data.testFlags);
+  } else if (testScenario < 0.55) {
+    // 20% - Read all flags
     readAllFlags();
-  } else if (testScenario < 0.7) {
-    // 30% - Read specific flag
+  } else if (testScenario < 0.75) {
+    // 20% - Read specific flag
     readSpecificFlag(data.testFlags);
   } else if (testScenario < 0.85) {
-    // 15% - Create new flag
+    // 10% - Create new flag
     createFeatureFlag();
   } else if (testScenario < 0.95) {
     // 10% - Update flag state
@@ -233,6 +243,107 @@ function queryFlagsByCodes(testFlags) {
   });
 }
 
+// NEW: Evaluation test functions
+function evaluateFlag(testFlags) {
+  if (!testFlags || testFlags.length === 0) return;
+  
+  group('Evaluate Single Flag', () => {
+    const randomFlag = testFlags[Math.floor(Math.random() * testFlags.length)];
+    const evaluationContext = generateEvaluationContext();
+    
+    const response = http.post(`${BASE_URL}/evaluations/${randomFlag}`, 
+      JSON.stringify(evaluationContext), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    const success = check(response, {
+      'POST /evaluations/{code} status is 200': (r) => r.status === 200,
+      'POST /evaluations/{code} response time < 100ms': (r) => r.timings.duration < 100,
+      'POST /evaluations/{code} returns evaluation result': (r) => {
+        try {
+          const data = JSON.parse(r.body);
+          return typeof data.enabled === 'boolean' && data.reason;
+        } catch {
+          return false;
+        }
+      }
+    });
+    
+    errorRate.add(!success);
+    responseTime.add(response.timings.duration);
+    flagEvaluations.add(1);
+  });
+}
+
+function bulkEvaluateFlags(testFlags) {
+  if (!testFlags || testFlags.length < 2) return;
+  
+  group('Bulk Evaluate Flags', () => {
+    // Select 2-4 random flags
+    const selectedFlags = testFlags
+      .sort(() => 0.5 - Math.random())
+      .slice(0, Math.floor(Math.random() * 3) + 2);
+    
+    const bulkRequest = {
+      flagCodes: selectedFlags,
+      context: generateEvaluationContext()
+    };
+    
+    const response = http.post(`${BASE_URL}/evaluations/bulk`, 
+      JSON.stringify(bulkRequest), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    const success = check(response, {
+      'POST /evaluations/bulk status is 200': (r) => r.status === 200,
+      'POST /evaluations/bulk response time < 150ms': (r) => r.timings.duration < 150,
+      'POST /evaluations/bulk returns bulk results': (r) => {
+        try {
+          const data = JSON.parse(r.body);
+          return typeof data === 'object' && Object.keys(data).length > 0;
+        } catch {
+          return false;
+        }
+      }
+    });
+    
+    errorRate.add(!success);
+    responseTime.add(response.timings.duration);
+    bulkEvaluations.add(1);
+  });
+}
+
+function generateEvaluationContext() {
+  const contexts = [
+    {
+      subjectId: `user_${Math.floor(Math.random() * 10000)}`,
+      attributes: {
+        plan: ['basic', 'premium', 'enterprise'][Math.floor(Math.random() * 3)],
+        creditScore: Math.floor(Math.random() * 400) + 600,
+        country: ['US', 'CA', 'UK', 'DE', 'FR'][Math.floor(Math.random() * 5)]
+      }
+    },
+    {
+      subjectId: `tenant_${Math.floor(Math.random() * 1000)}`,
+      attributes: {
+        tier: ['starter', 'growth', 'enterprise'][Math.floor(Math.random() * 3)],
+        employees: Math.floor(Math.random() * 5000) + 10,
+        industry: ['tech', 'finance', 'healthcare', 'retail'][Math.floor(Math.random() * 4)]
+      }
+    },
+    {
+      subjectId: `device_${Math.floor(Math.random() * 50000)}`,
+      attributes: {
+        os: ['ios', 'android', 'web'][Math.floor(Math.random() * 3)],
+        version: `${Math.floor(Math.random() * 10) + 1}.${Math.floor(Math.random() * 10)}`,
+        premium: Math.random() > 0.7
+      }
+    }
+  ];
+  
+  return contexts[Math.floor(Math.random() * contexts.length)];
+}
+
 // Teardown function - runs once after the test
 export function teardown(data) {
   console.log('🧹 Test completed, running cleanup...');
@@ -242,4 +353,5 @@ export function teardown(data) {
   // For now, we'll leave them for inspection
   
   console.log('✅ Ground Control k6 load test completed successfully!');
+  console.log('📊 New evaluation endpoints tested with realistic user contexts');
 }
