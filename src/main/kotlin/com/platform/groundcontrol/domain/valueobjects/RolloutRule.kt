@@ -21,7 +21,8 @@ class RolloutRule(
     startAt: Instant? = null,
     endAt: Instant? = null,
     priority: Int? = 0,
-    active: Boolean
+    active: Boolean,
+    conditions: MutableList<Condition> = mutableListOf()
 ) {
     var attributeKey: String? = attributeKey
         private set
@@ -61,4 +62,21 @@ class RolloutRule(
 
     var active: Boolean = active
         private set
+
+    var conditions: MutableList<Condition> = mutableListOf()
+        private set
+
+    fun getRuleValue(): Any? {
+        return when {
+            valueBool != null -> valueBool
+            valueString != null -> valueString
+            valueInt != null -> valueInt
+            valuePercentage != null -> valuePercentage
+            else -> true
+        }
+    }
+
+    fun hasConditions(): Boolean = conditions.isNotEmpty()
+
+
 }
