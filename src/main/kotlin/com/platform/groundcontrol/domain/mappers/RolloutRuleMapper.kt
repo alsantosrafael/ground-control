@@ -1,15 +1,13 @@
 package com.platform.groundcontrol.domain.mappers
 
 import com.platform.groundcontrol.domain.entities.RolloutRuleEntity
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagId
 import com.platform.groundcontrol.domain.valueobjects.RolloutRule
-import com.platform.groundcontrol.domain.valueobjects.RolloutRuleId
 
 object RolloutRuleMapper {
     fun RolloutRuleEntity.toDomain(): RolloutRule =
         RolloutRule(
-            id = RolloutRuleId(this.id),
-            featureFlagId = FeatureFlagId(this.featureFlag?.id),
+            id = this.id,
+            featureFlagId = this.featureFlag?.id,
             attributeKey = this.attributeKey,
             attributeValue = this.attributeValue,
             percentage = this.percentage,
@@ -28,7 +26,7 @@ object RolloutRuleMapper {
 
     fun RolloutRule.toEntity(): RolloutRuleEntity =
         RolloutRuleEntity(
-            id = this.id.value,
+            id = this.id,
             featureFlag = null, // Será setado no FeatureFlagMapper
             attributeKey = this.attributeKey,
             attributeValue = this.attributeValue,

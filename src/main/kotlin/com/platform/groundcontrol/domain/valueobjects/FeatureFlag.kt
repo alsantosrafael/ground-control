@@ -1,73 +1,39 @@
 package com.platform.groundcontrol.domain.valueobjects
 
 import com.platform.groundcontrol.domain.enums.FlagType
+import java.io.Serializable
 import java.time.Instant
 
-@JvmInline
-value class FeatureFlagId(val value: Long?) {}
-
-@JvmInline
-value class FeatureFlagCode(val value: String) {
-    init {
-        require(value.matches(Regex("[a-zA-Z0-9_-]+"))) { "Feature flag code must contain only letters, numbers, hyphens, or underscores." }
-        require(value.length <= 50) { "Feature flag code cannot exceed 50 characters." }
-    }
-}
-
-@JvmInline
-value class FeatureFlagName(val value: String) {
-    init {
-        require(value.isNotBlank()) { "Feature flag name cannot be blank." }
-        require(value.length <= 100) { "Feature flag name cannot exceed 100 characters." }
-    }
-}
-
-class FeatureFlag(
-    val id: FeatureFlagId,
-    code: FeatureFlagCode,
-    name: FeatureFlagName,
-    description: String?,
-    value: Any?,
-    valueType: FlagType,
-    enabled: Boolean,
-    dueAt: Instant? = null,
-    val rolloutRules: MutableList<RolloutRule> = mutableListOf()
-) {
-    var name: FeatureFlagName = name
-        private set
-
-    var code: FeatureFlagCode = code
-        private set
-
-    var description: String? = description
-        private set
-
-    var value: Any? = value
-        private set
-
-    var valueType: FlagType = valueType
-        private set
-
-    var enabled: Boolean = enabled
-        private set
-
-    var createdAt: Instant = Instant.now()
-
+data class FeatureFlag(
+    val id: Long?,
+    var code: String,
+    var name: String,
+    var description: String?,
+    var value: Any?,
+    var valueType: FlagType,
+    var enabled: Boolean,
+    var dueAt: Instant? = null,
+    val rolloutRules: MutableList<RolloutRule> = mutableListOf(),
+    var createdAt: Instant = Instant.now(),
     var updatedAt: Instant = Instant.now()
-
-    var dueAt: Instant? = dueAt
-        private set
+) : Serializable {
+    init {
+        require(code.matches(Regex("[a-zA-Z0-9_-]+"))) { "Feature flag code must contain only letters, numbers, hyphens, or underscores." }
+        require(code.length <= 50) { "Feature flag code cannot exceed 50 characters." }
+        require(name.isNotBlank()) { "Feature flag name cannot be blank." }
+        require(name.length <= 100) { "Feature flag name cannot exceed 100 characters." }
+    }
 
     fun enable() {
-        if (!this@FeatureFlag.enabled) {
-            this@FeatureFlag.enabled = true
+        if (!enabled) {
+            enabled = true
             updatedAt = Instant.now()
         }
     }
 
     fun disable() {
-        if (this@FeatureFlag.enabled) {
-            this@FeatureFlag.enabled = false
+        if (enabled) {
+            enabled = false
             updatedAt = Instant.now()
         }
     }
@@ -76,16 +42,16 @@ class FeatureFlag(
         var hasChanges = false
 
         newName?.let {
-            if (it != name.value) {
-                this.name = FeatureFlagName(it)
+            if (it != name) {
+                this.name = it
                 hasChanges = true
             }
         }
 
         newCode?.let {
-            if ( it != code.value) {
-                this.code = FeatureFlagCode(it)
-                hasChanges  = true
+            if (it != code) {
+                this.code = it
+                hasChanges = true
             }
         }
 

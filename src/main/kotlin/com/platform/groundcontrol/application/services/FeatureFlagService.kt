@@ -4,9 +4,6 @@ import com.platform.groundcontrol.domain.mappers.FeatureFlagMapper.toDomain
 import com.platform.groundcontrol.domain.mappers.FeatureFlagMapper.toEntity
 import com.platform.groundcontrol.domain.valueobjects.CreateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagCode
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagId
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagName
 import com.platform.groundcontrol.domain.valueobjects.FindByCodes
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
@@ -39,14 +36,14 @@ class FeatureFlagService(
                 flagCode, request.name, request.valueType, request.enabled)
             
             val ff = FeatureFlag(
-                FeatureFlagId(null as Long?),
-                FeatureFlagCode(request.code),
-                FeatureFlagName(request.name),
-                request.description,
-                request.value,
-                request.valueType,
-                request.enabled,
-                request.dueAt
+                id = null,
+                code = request.code,
+                name = request.name,
+                description = request.description,
+                value = request.value,
+                valueType = request.valueType,
+                enabled = request.enabled,
+                dueAt = request.dueAt
             )
             
             val createdFF = featureFlagRepository.save(ff.toEntity())
@@ -54,7 +51,7 @@ class FeatureFlagService(
             val duration = System.currentTimeMillis() - startTime
             
             logger.info("Feature flag created: code={}, id={}, durationMs={}", 
-                flagCode, result.id.value, duration)
+                flagCode, result.id, duration)
             
             return result
             
@@ -120,7 +117,7 @@ class FeatureFlagService(
             val duration = System.currentTimeMillis() - startTime
             
             logger.debug("Retrieved feature flag: code={}, id={}, enabled={}, rulesCount={}, durationMs={}", 
-                code, result.id.value, result.enabled, result.rolloutRules.size, duration)
+                code, result.id, result.enabled, result.rolloutRules.size, duration)
             
             return result
             

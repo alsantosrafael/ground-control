@@ -1,9 +1,6 @@
 package com.platform.groundcontrol.domain.mappers
 
 import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagCode
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagId
-import com.platform.groundcontrol.domain.valueobjects.FeatureFlagName
 import com.platform.groundcontrol.domain.entities.FeatureFlagEntity
 import com.platform.groundcontrol.domain.enums.FlagType
 import com.platform.groundcontrol.domain.mappers.RolloutRuleMapper.toDomain
@@ -13,9 +10,9 @@ object FeatureFlagMapper {
 
     fun FeatureFlagEntity.toDomain(): FeatureFlag {
         return FeatureFlag(
-            id = FeatureFlagId(this.id!!),
-            code = FeatureFlagCode(this.code),
-            name = FeatureFlagName(this.name),
+            id = this.id,
+            code = this.code,
+            name = this.name,
             description = this.description,
             value = when(this.flagType) {
                 FlagType.INT -> this.defaultIntValue
@@ -33,9 +30,9 @@ object FeatureFlagMapper {
 
     fun FeatureFlag.toEntity(): FeatureFlagEntity {
         val entity = FeatureFlagEntity(
-            id = this.id.value,
-            code = this.code.value,
-            name = this.name.value,
+            id = this.id,
+            code = this.code,
+            name = this.name,
             description = this.description,
             enabled = this.enabled,
             flagType = this.valueType,

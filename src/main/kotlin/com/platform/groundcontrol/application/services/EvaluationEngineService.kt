@@ -19,10 +19,10 @@ class EvaluationEngineService(
         private val logger = LoggerFactory.getLogger(EvaluationEngineService::class.java)
     }
 
-    @Cacheable("evaluations", key = "#flag.code.value + ':' + #context.subjectId")
+    @Cacheable("evaluations", key = "#flag.code + ':' + #context.subjectId")
     fun evaluate(flag: FeatureFlag, context: EvaluationContext): EvaluationResult {
         val startTime = System.currentTimeMillis()
-        val flagCode = flag.code.value
+        val flagCode = flag.code
         val subjectId = context.subjectId
         
         // Set MDC for distributed tracing
@@ -62,13 +62,13 @@ class EvaluationEngineService(
 
             for ((index, rule) in sortedRules.withIndex()) {
                 logger.debug("Evaluating rule {}/{}: flag={}, ruleId={}, priority={}", 
-                    index + 1, sortedRules.size, flagCode, rule.id.value, rule.priority)
+                    index + 1, sortedRules.size, flagCode, rule.id, rule.priority)
                 
                 val ruleResult = evaluateRule(rule, context, flag)
                 if (ruleResult != null) {
                     val evalTime = System.currentTimeMillis() - startTime
                     logger.info("Flag evaluation: RULE_MATCH - flag={}, subject={}, ruleId={}, variant={}, evalTimeMs={}", 
-                        flagCode, subjectId, rule.id.value, ruleResult.variant, evalTime)
+                        flagCode, subjectId, rule.id, ruleResult.variant, evalTime)
                     return ruleResult
                 }
             }
@@ -96,8 +96,8 @@ class EvaluationEngineService(
     }
 
     private fun evaluateRule(rule: RolloutRule, context: EvaluationContext, flag: FeatureFlag): EvaluationResult? {
-        val ruleId = rule.id.value
-        val flagCode = flag.code.value
+        val ruleId = rule.id
+        val flagCode = flag.code
         val subjectId = context.subjectId
         
         // Time-based rule validation
@@ -131,7 +131,7 @@ class EvaluationEngineService(
 
         // Percentage rollout evaluation
         val passesPercentage = rule.percentage?.let { percentage ->
-            val passes = isSubjectInPercentage(context.subjectId, flag.code.value, percentage)
+            val passes = isSubjectInPercentage(context.subjectId, flag.code, percentage)
             logger.debug("Rule evaluation: PERCENTAGE_CHECK - flag={}, ruleId={}, subject={}, percentage={}, passes={}", 
                 flagCode, ruleId, subjectId, percentage, passes)
             passes
@@ -155,7 +155,7 @@ class EvaluationEngineService(
 
     private fun evaluateConditions(rule: RolloutRule, context: EvaluationContext): Boolean {
         val flagCode = MDC.get("flagCode")
-        val ruleId = rule.id.value
+        val ruleId = rule.id
         
         // ALL conditions must pass (AND logic)
         val results = rule.conditions.map { condition ->

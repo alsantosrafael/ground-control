@@ -1,71 +1,27 @@
 package com.platform.groundcontrol.domain.valueobjects
 
+import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-@JvmInline
-value class RolloutRuleId(val value: UUID?)
-
-class RolloutRule(
-    val id: RolloutRuleId,
-    val featureFlagId: FeatureFlagId,
-    attributeKey: String?,
-    attributeValue: String?,
-    percentage: Double?,
-    distributionKeyAttribute: String?,
-    valueBool: Boolean?,
-    valueString: String?,
-    valueInt: Int?,
-    valuePercentage: Double?,
-    variantName: String?,
-    startAt: Instant? = null,
-    endAt: Instant? = null,
-    priority: Int? = 0,
-    active: Boolean,
-    conditions: MutableList<Condition> = mutableListOf()
-) {
-    var attributeKey: String? = attributeKey
-        private set
-
-    var attributeValue: String? = attributeValue
-        private set
-
-    var percentage: Double? = percentage
-        private set
-
-    var distributionKeyAttribute: String? = distributionKeyAttribute
-        private set
-
-    var valueBool: Boolean? = valueBool
-        private set
-
-    var valueString: String? = valueString
-        private set
-
-    var valueInt: Int? = valueInt
-        private set
-
-    var valuePercentage: Double? = valuePercentage
-        private set
-
-    var variantName: String? = variantName
-        private set
-
-    var startAt: Instant? = startAt
-        private set
-
-    var endAt: Instant? = endAt
-        private set
-
-    var priority: Int? = priority
-        private set
-
-    var active: Boolean = active
-        private set
-
-    var conditions: MutableList<Condition> = mutableListOf()
-        private set
-
+data class RolloutRule(
+    val id: UUID?,
+    val featureFlagId: Long?,
+    var attributeKey: String?,
+    var attributeValue: String?,
+    var percentage: Double?,
+    var distributionKeyAttribute: String?,
+    var valueBool: Boolean?,
+    var valueString: String?,
+    var valueInt: Int?,
+    var valuePercentage: Double?,
+    var variantName: String?,
+    var startAt: Instant? = null,
+    var endAt: Instant? = null,
+    var priority: Int? = 0,
+    var active: Boolean = true,
+    val conditions: MutableList<Condition> = mutableListOf()
+) : Serializable {
     fun getRuleValue(): Any? {
         return when {
             valueBool != null -> valueBool
@@ -77,6 +33,4 @@ class RolloutRule(
     }
 
     fun hasConditions(): Boolean = conditions.isNotEmpty()
-
-
 }
