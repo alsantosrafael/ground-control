@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 
 @Service
@@ -65,26 +67,30 @@ class FeatureFlagService(
         }
     }
 
-    @Cacheable("featureFlags")
-    fun getAll(): List<FeatureFlag> {
+    fun getAll(pageable: Pageable): Page<FeatureFlag> {
         val startTime = System.currentTimeMillis()
         
-        MDC.put("operation", "getAll")
+        MDC.put("operation", "getAllPaginated")
+        MDC.put("page", pageable.pageNumber.toString())
+        MDC.put("size", pageable.pageSize.toString())
         
         try {
-            logger.debug("Retrieving all feature flags")
+            logger.debug("Retrieving paginated feature flags: page={}, size={}", 
+                pageable.pageNumber, pageable.pageSize)
             
-            val list = featureFlagRepository.findAllWithRules()
-            val result = list.map { it.toDomain() }
+            val page = featureFlagRepository.findAllWithRules(pageable)
+            val result = page.map { it.toDomain() }
             val duration = System.currentTimeMillis() - startTime
             
-            logger.info("Retrieved all feature flags: count={}, durationMs={}", result.size, duration)
+            logger.info("Retrieved paginated feature flags: page={}, size={}, totalElements={}, totalPages={}, durationMs={}", 
+                pageable.pageNumber, pageable.pageSize, result.totalElements, result.totalPages, duration)
+            
             return result
             
         } catch (e: Exception) {
             val duration = System.currentTimeMillis() - startTime
-            logger.error("Failed to retrieve all feature flags: error={}, durationMs={}", 
-                e.message, duration, e)
+            logger.error("Failed to retrieve paginated feature flags: page={}, size={}, error={}, durationMs={}", 
+                pageable.pageNumber, pageable.pageSize, e.message, duration, e)
             throw e
         } finally {
             MDC.clear()
@@ -92,7 +98,7 @@ class FeatureFlagService(
     }
 
     fun getAllByCodes(codes: List<String>): FindByCodes {
-        val featureFlags =  featureFlagRepository.findByCodeInWithRules(codes);
+        val featureFlags = featureFlagRepository.findByCodeInWithRules(codes)
         val foundCodes = featureFlags.map { it.code }
         val notFoundCodes = codes.filterNot { it in foundCodes }
         return FindByCodes(featureFlags.map { it.toDomain() }, notFoundCodes)
@@ -132,7 +138,7 @@ class FeatureFlagService(
     }
 
     @CacheEvict(value = ["featureFlags", "featureFlagByCode"], allEntries = true)
-    fun update(code: String, request: UpdateFeatureFlag): Unit {
+    fun update(code: String, request: UpdateFeatureFlag) {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
         flag.updateWith{

@@ -6,6 +6,9 @@ import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.FindByCodes
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
+import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -39,10 +42,10 @@ class FeatureFlagController(
     }
 
     @GetMapping
-    fun fetchAll(): ResponseEntity<List<FeatureFlag>> {
+    fun fetchAll(@PageableDefault(size = 20, sort = ["updatedAt"]) pageable: Pageable): ResponseEntity<Page<FeatureFlag>> {
         return ResponseEntity
             .ok()
-            .body(featureFlagService.getAll())
+            .body(featureFlagService.getAll(pageable))
     }
 
     @GetMapping("/{code}")
