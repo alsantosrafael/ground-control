@@ -1,0 +1,519 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Ground Control - Feature Flag API",
+		"description": "Complete API collection for Ground Control feature flag management system.\n\n## Quick Start\n1. Set environment variables (baseUrl, flagCode)\n2. Run \"Create Sample Flag\" request\n3. Try \"Evaluate Flag\" with different user contexts\n4. Experiment with rollout rules and conditions\n\n## Environment Variables\n- `baseUrl`: http://localhost:8080\n- `flagCode`: sample-feature\n- `userId`: user123",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Feature Flags",
+			"item": [
+				{
+					"name": "Create Boolean Flag",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"{{flagCode}}\",\n  \"name\": \"Sample Feature Flag\",\n  \"description\": \"A sample feature flag for testing\",\n  \"value\": true,\n  \"valueType\": \"BOOLEAN\",\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/flags",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags"
+							]
+						},
+						"description": "Creates a new boolean feature flag"
+					}
+				},
+				{
+					"name": "Create String Flag",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"code\": \"theme-color\",\n  \"name\": \"Theme Color\",\n  \"description\": \"Controls the application theme color\",\n  \"value\": \"blue\",\n  \"valueType\": \"STRING\",\n  \"enabled\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/flags",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags"
+							]
+						},
+						"description": "Creates a new string feature flag for theme configuration"
+					}
+				},
+				{
+					"name": "Get All Flags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/flags",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags"
+							]
+						},
+						"description": "Retrieves all feature flags"
+					}
+				},
+				{
+					"name": "Get Flag by Code",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}"
+							]
+						},
+						"description": "Retrieves a specific feature flag by its code"
+					}
+				},
+				{
+					"name": "Update Flag",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated Sample Feature\",\n  \"description\": \"Updated description for testing\",\n  \"enabled\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}"
+							]
+						},
+						"description": "Updates an existing feature flag"
+					}
+				},
+				{
+					"name": "Enable Flag",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/enable",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}",
+								"enable"
+							]
+						},
+						"description": "Enables a feature flag"
+					}
+				},
+				{
+					"name": "Disable Flag",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/disable",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}",
+								"disable"
+							]
+						},
+						"description": "Disables a feature flag"
+					}
+				}
+			],
+			"description": "Operations for managing feature flags"
+		},
+		{
+			"name": "Flag Evaluation",
+			"item": [
+				{
+					"name": "Simple Flag Evaluation",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluate/{{flagCode}}?subjectId={{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluate",
+								"{{flagCode}}"
+							],
+							"query": [
+								{
+									"key": "subjectId",
+									"value": "{{userId}}"
+								}
+							]
+						},
+						"description": "Evaluates a feature flag for a specific user"
+					}
+				},
+				{
+					"name": "Flag Evaluation with Context",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subjectId\": \"{{userId}}\",\n  \"attributes\": {\n    \"plan\": \"premium\",\n    \"country\": \"US\",\n    \"creditScore\": 750,\n    \"betaTester\": true,\n    \"organizationSize\": 500\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluate/{{flagCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluate",
+								"{{flagCode}}"
+							]
+						},
+						"description": "Evaluates a feature flag with user context and attributes"
+					}
+				},
+				{
+					"name": "Bulk Flag Evaluation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subjectId\": \"{{userId}}\",\n  \"flagCodes\": [\"{{flagCode}}\", \"theme-color\"],\n  \"attributes\": {\n    \"plan\": \"premium\",\n    \"country\": \"US\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/evaluate/bulk",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"evaluate",
+								"bulk"
+							]
+						},
+						"description": "Evaluates multiple feature flags at once"
+					}
+				}
+			],
+			"description": "Operations for evaluating feature flags"
+		},
+		{
+			"name": "Rollout Rules",
+			"item": [
+				{
+					"name": "Create Percentage Rollout Rule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"percentage\": 25.0,\n  \"valueBool\": true,\n  \"variantName\": \"25-percent-rollout\",\n  \"priority\": 1,\n  \"active\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}",
+								"rules"
+							]
+						},
+						"description": "Creates a 25% percentage rollout rule"
+					}
+				},
+				{
+					"name": "Create Premium User Rule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"percentage\": 100.0,\n  \"valueBool\": true,\n  \"variantName\": \"premium-users\",\n  \"priority\": 1,\n  \"active\": true,\n  \"conditions\": [\n    {\n      \"attribute\": \"plan\",\n      \"operator\": \"EQUALS\",\n      \"value\": \"premium\",\n      \"dataType\": \"STRING\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}",
+								"rules"
+							]
+						},
+						"description": "Creates a rule targeting premium users"
+					}
+				},
+				{
+					"name": "Create High Credit Score Rule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"percentage\": 100.0,\n  \"valueBool\": true,\n  \"variantName\": \"high-credit-users\",\n  \"priority\": 2,\n  \"active\": true,\n  \"conditions\": [\n    {\n      \"attribute\": \"creditScore\",\n      \"operator\": \"GREATER_THAN\",\n      \"value\": 700,\n      \"dataType\": \"NUMBER\"\n    },\n    {\n      \"attribute\": \"country\",\n      \"operator\": \"EQUALS\",\n      \"value\": \"US\",\n      \"dataType\": \"STRING\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}",
+								"rules"
+							]
+						},
+						"description": "Creates a rule for US users with credit score > 700"
+					}
+				},
+				{
+					"name": "Create Time-based Rule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"percentage\": 100.0,\n  \"valueBool\": true,\n  \"variantName\": \"scheduled-feature\",\n  \"priority\": 1,\n  \"active\": true,\n  \"startAt\": \"2024-01-01T00:00:00Z\",\n  \"endAt\": \"2024-12-31T23:59:59Z\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}",
+								"rules"
+							]
+						},
+						"description": "Creates a time-based rule active for 2024"
+					}
+				},
+				{
+					"name": "Get Flag Rules",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"flags",
+								"{{flagCode}}",
+								"rules"
+							]
+						},
+						"description": "Gets all rules for a feature flag"
+					}
+				}
+			],
+			"description": "Operations for managing rollout rules"
+		},
+		{
+			"name": "Health & Monitoring",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						},
+						"description": "Checks application health status"
+					}
+				},
+				{
+					"name": "Application Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/info",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"info"
+							]
+						},
+						"description": "Gets application information"
+					}
+				},
+				{
+					"name": "Prometheus Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/prometheus",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"prometheus"
+							]
+						},
+						"description": "Gets Prometheus-format metrics"
+					}
+				},
+				{
+					"name": "Application Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/actuator/metrics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"actuator",
+								"metrics"
+							]
+						},
+						"description": "Lists available application metrics"
+					}
+				}
+			],
+			"description": "Health checks and monitoring endpoints"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "flagCode",
+			"value": "sample-feature",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "user123",
+			"type": "string"
+		}
+	]
+}
