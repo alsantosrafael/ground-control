@@ -25,7 +25,7 @@ class FeatureFlagService(
     companion object {
         private val logger = LoggerFactory.getLogger(FeatureFlagService::class.java)
     }
-    @CacheEvict(value = ["featureFlags"], allEntries = true)
+    @CacheEvict(value = ["featureFlagByCode"], allEntries = true)
     fun create(request: CreateFeatureFlag): FeatureFlag {
         val startTime = System.currentTimeMillis()
         val flagCode = request.code
@@ -78,7 +78,7 @@ class FeatureFlagService(
             logger.debug("Retrieving paginated feature flags: page={}, size={}", 
                 pageable.pageNumber, pageable.pageSize)
             
-            val page = featureFlagRepository.findAllWithRules(pageable)
+            val page = featureFlagRepository.findAll(pageable)
             val result = page.map { it.toDomain() }
             val duration = System.currentTimeMillis() - startTime
             
@@ -137,7 +137,7 @@ class FeatureFlagService(
         }
     }
 
-    @CacheEvict(value = ["featureFlags", "featureFlagByCode"], allEntries = true)
+    @CacheEvict(value = ["featureFlagByCode"], allEntries = true)
     fun update(code: String, request: UpdateFeatureFlag) {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
@@ -150,7 +150,7 @@ class FeatureFlagService(
         featureFlagRepository.save(flag.toEntity())
     }
 
-    @CacheEvict(value = ["featureFlags", "featureFlagByCode"], allEntries = true)
+    @CacheEvict(value = ["featureFlagByCode"], allEntries = true)
     fun updateFeatureFlagStatus(code: String, request: UpdateFeatureFlagState) {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")

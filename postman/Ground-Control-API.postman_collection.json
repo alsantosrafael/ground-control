@@ -24,12 +24,11 @@
 							"raw": "{\n  \"code\": \"{{flagCode}}\",\n  \"name\": \"Sample Feature Flag\",\n  \"description\": \"A sample feature flag for testing\",\n  \"value\": true,\n  \"valueType\": \"BOOLEAN\",\n  \"enabled\": true\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/flags",
+							"raw": "{{baseUrl}}/flags",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags"
 							]
 						},
@@ -51,12 +50,11 @@
 							"raw": "{\n  \"code\": \"theme-color\",\n  \"name\": \"Theme Color\",\n  \"description\": \"Controls the application theme color\",\n  \"value\": \"blue\",\n  \"valueType\": \"STRING\",\n  \"enabled\": true\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/flags",
+							"raw": "{{baseUrl}}/flags",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags"
 							]
 						},
@@ -69,12 +67,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/flags",
+							"raw": "{{baseUrl}}/flags",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags"
 							]
 						},
@@ -87,12 +84,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}"
 							]
@@ -115,12 +111,11 @@
 							"raw": "{\n  \"name\": \"Updated Sample Feature\",\n  \"description\": \"Updated description for testing\",\n  \"enabled\": false\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}"
 							]
@@ -134,12 +129,11 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/enable",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}/enable",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}",
 								"enable"
@@ -154,12 +148,11 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/disable",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}/disable",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}",
 								"disable"
@@ -177,23 +170,25 @@
 				{
 					"name": "Simple Flag Evaluation",
 					"request": {
-						"method": "GET",
-						"header": [],
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"subjectId\": \"{{userId}}\",\n  \"attributes\": {}\n}"
+						},
 						"url": {
-							"raw": "{{baseUrl}}/api/evaluate/{{flagCode}}?subjectId={{userId}}",
+							"raw": "{{baseUrl}}/evaluations/{{flagCode}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
-								"evaluate",
+								"evaluations",
 								"{{flagCode}}"
-							],
-							"query": [
-								{
-									"key": "subjectId",
-									"value": "{{userId}}"
-								}
 							]
 						},
 						"description": "Evaluates a feature flag for a specific user"
@@ -214,13 +209,12 @@
 							"raw": "{\n  \"subjectId\": \"{{userId}}\",\n  \"attributes\": {\n    \"plan\": \"premium\",\n    \"country\": \"US\",\n    \"creditScore\": 750,\n    \"betaTester\": true,\n    \"organizationSize\": 500\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/evaluate/{{flagCode}}",
+							"raw": "{{baseUrl}}/evaluations/{{flagCode}}",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
-								"evaluate",
+								"evaluations",
 								"{{flagCode}}"
 							]
 						},
@@ -242,13 +236,12 @@
 							"raw": "{\n  \"subjectId\": \"{{userId}}\",\n  \"flagCodes\": [\"{{flagCode}}\", \"theme-color\"],\n  \"attributes\": {\n    \"plan\": \"premium\",\n    \"country\": \"US\"\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/evaluate/bulk",
+							"raw": "{{baseUrl}}/evaluations/bulk",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
-								"evaluate",
+								"evaluations",
 								"bulk"
 							]
 						},
@@ -276,12 +269,11 @@
 							"raw": "{\n  \"percentage\": 25.0,\n  \"valueBool\": true,\n  \"variantName\": \"25-percent-rollout\",\n  \"priority\": 1,\n  \"active\": true\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}/rules",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}",
 								"rules"
@@ -305,12 +297,11 @@
 							"raw": "{\n  \"percentage\": 100.0,\n  \"valueBool\": true,\n  \"variantName\": \"premium-users\",\n  \"priority\": 1,\n  \"active\": true,\n  \"conditions\": [\n    {\n      \"attribute\": \"plan\",\n      \"operator\": \"EQUALS\",\n      \"value\": \"premium\",\n      \"dataType\": \"STRING\"\n    }\n  ]\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}/rules",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}",
 								"rules"
@@ -334,12 +325,11 @@
 							"raw": "{\n  \"percentage\": 100.0,\n  \"valueBool\": true,\n  \"variantName\": \"high-credit-users\",\n  \"priority\": 2,\n  \"active\": true,\n  \"conditions\": [\n    {\n      \"attribute\": \"creditScore\",\n      \"operator\": \"GREATER_THAN\",\n      \"value\": 700,\n      \"dataType\": \"NUMBER\"\n    },\n    {\n      \"attribute\": \"country\",\n      \"operator\": \"EQUALS\",\n      \"value\": \"US\",\n      \"dataType\": \"STRING\"\n    }\n  ]\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}/rules",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}",
 								"rules"
@@ -363,12 +353,11 @@
 							"raw": "{\n  \"percentage\": 100.0,\n  \"valueBool\": true,\n  \"variantName\": \"scheduled-feature\",\n  \"priority\": 1,\n  \"active\": true,\n  \"startAt\": \"2024-01-01T00:00:00Z\",\n  \"endAt\": \"2024-12-31T23:59:59Z\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}/rules",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}",
 								"rules"
@@ -383,12 +372,11 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/flags/{{flagCode}}/rules",
+							"raw": "{{baseUrl}}/flags/{{flagCode}}/rules",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
-								"api",
 								"flags",
 								"{{flagCode}}",
 								"rules"

@@ -1,16 +1,12 @@
 package com.platform.groundcontrol.infrastructure.repositories
 
 import com.platform.groundcontrol.domain.entities.FeatureFlagEntity
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import java.util.UUID
-
 @Repository
-interface FeatureFlagRepository : JpaRepository<FeatureFlagEntity, UUID> {
+interface FeatureFlagRepository : JpaRepository<FeatureFlagEntity, Long> {
     
     @Query("SELECT f FROM FeatureFlagEntity f LEFT JOIN FETCH f.rolloutRules WHERE f.code = :code")
     fun findByCodeWithRules(@Param("code") code: String): FeatureFlagEntity?
@@ -22,8 +18,6 @@ interface FeatureFlagRepository : JpaRepository<FeatureFlagEntity, UUID> {
     
     fun findByCodeIn(codes: List<String>): List<FeatureFlagEntity>
     
-    @Query("SELECT f FROM FeatureFlagEntity f LEFT JOIN FETCH f.rolloutRules")
-    fun findAllWithRules(pageable: Pageable): Page<FeatureFlagEntity>
     
     @Query("SELECT f FROM FeatureFlagEntity f WHERE f.enabled = :enabled ORDER BY f.updatedAt DESC")
     fun findByEnabledOrderByUpdatedAtDesc(@Param("enabled") enabled: Boolean): List<FeatureFlagEntity>
