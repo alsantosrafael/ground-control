@@ -19,7 +19,7 @@ class EvaluationEngineService(
         private val logger = LoggerFactory.getLogger(EvaluationEngineService::class.java)
     }
 
-    @Cacheable("evaluations", key = "#flag.code + ':' + #context.subjectId")
+    @Cacheable("evaluations", key = "#flag.code + ':' + (#context.subjectId ?: 'global')")
     fun evaluate(flag: FeatureFlag, context: EvaluationContext): EvaluationResult {
         val startTime = System.currentTimeMillis()
         val flagCode = flag.code
@@ -131,10 +131,16 @@ class EvaluationEngineService(
 
         // Percentage rollout evaluation
         val passesPercentage = rule.percentage?.let { percentage ->
-            val passes = isSubjectInPercentage(context.subjectId, flag.code, percentage)
-            logger.debug("Rule evaluation: PERCENTAGE_CHECK - flag={}, ruleId={}, subject={}, percentage={}, passes={}", 
-                flagCode, ruleId, subjectId, percentage, passes)
-            passes
+            if (context.subjectId == null) {
+                logger.debug("Rule evaluation: PERCENTAGE_SKIPPED - flag={}, ruleId={}, reason=no_subject_id", 
+                    flagCode, ruleId)
+                false
+            } else {
+                val passes = isSubjectInPercentage(context.subjectId, flag.code, percentage)
+                logger.debug("Rule evaluation: PERCENTAGE_CHECK - flag={}, ruleId={}, subject={}, percentage={}, passes={}", 
+                    flagCode, ruleId, subjectId, percentage, passes)
+                passes
+            }
         } ?: true
 
         if (!passesPercentage) {

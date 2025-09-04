@@ -202,7 +202,30 @@ Content-Type: application/json
 }
 ```
 
-#### 3. Evaluate Single Flag
+#### 3a. Global Flag Evaluation (No User Context)
+
+Perfect for kill switches, maintenance mode, and global on/off flags:
+
+```bash
+POST /evaluations/maintenance-mode
+Content-Type: application/json
+
+{}
+```
+
+**Response:**
+```json
+{
+  "enabled": false,
+  "value": false,
+  "valueType": "BOOLEAN",
+  "reason": "DEFAULT"
+}
+```
+
+#### 3b. User-Specific Flag Evaluation
+
+For A/B tests, rollouts, and personalized features:
 
 ```bash
 POST /evaluations/premium-features
@@ -276,6 +299,14 @@ Content-Type: application/json
   }
 }
 ```
+
+### Evaluation Context - `subjectId` is Optional
+
+The `subjectId` field is **optional** in evaluation requests:
+
+- **🌍 Global Evaluation**: Omit `subjectId` for kill switches, maintenance mode, and global on/off flags
+- **👤 User-Specific**: Include `subjectId` for A/B tests, rollouts, and personalized features  
+- **🎯 Targeted Rules**: Percentage rollouts require `subjectId` for consistent user assignment
 
 ### Advanced Condition Examples
 

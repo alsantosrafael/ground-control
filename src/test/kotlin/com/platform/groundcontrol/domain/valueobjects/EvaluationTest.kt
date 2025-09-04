@@ -97,6 +97,50 @@ class EvaluationTest {
             assertTrue(context.attributes["metadata"] is Map<*, *>)
             assertEquals(85.5, context.attributes["score"])
         }
+
+        @Test
+        fun `should create evaluation context with null subjectId for global evaluation`() {
+            val context = EvaluationContext()
+
+            assertEquals(null, context.subjectId)
+            assertEquals(emptyMap(), context.attributes)
+        }
+
+        @Test
+        fun `should create evaluation context with attributes but no subjectId`() {
+            val attributes = mapOf("feature" to "enabled", "version" to "1.0")
+            val context = EvaluationContext(attributes = attributes)
+
+            assertEquals(null, context.subjectId)
+            assertEquals(attributes, context.attributes)
+        }
+
+        @Test
+        fun `should return null distribution key when subjectId is null`() {
+            val context = EvaluationContext(attributes = mapOf("plan" to "premium"))
+
+            val distributionKey = context.getDistributionKey(null)
+
+            assertEquals(null, distributionKey)
+        }
+
+        @Test
+        fun `should return attribute value when subjectId is null but attribute exists`() {
+            val context = EvaluationContext(attributes = mapOf("userId" to "fallback_123"))
+
+            val distributionKey = context.getDistributionKey("userId")
+
+            assertEquals("fallback_123", distributionKey)
+        }
+
+        @Test
+        fun `should return null when both subjectId and requested attribute are null`() {
+            val context = EvaluationContext(attributes = mapOf("plan" to "premium"))
+
+            val distributionKey = context.getDistributionKey("nonexistent")
+
+            assertEquals(null, distributionKey)
+        }
     }
 
     @Nested

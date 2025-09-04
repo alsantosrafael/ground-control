@@ -5,10 +5,10 @@ import com.platform.groundcontrol.domain.enums.FlagType
 import com.platform.groundcontrol.domain.enums.Reason
 
 data class EvaluationContext(
-    val subjectId: String,
+    val subjectId: String? = null,
     val attributes: Map<String, Any> = emptyMap(),
 ){
-    fun getDistributionKey(attributeName: String?): String {
+    fun getDistributionKey(attributeName: String?): String? {
         return when (attributeName) {
             null -> subjectId
             else -> attributes[attributeName]?.toString() ?: subjectId

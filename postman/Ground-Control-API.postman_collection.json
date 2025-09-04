@@ -168,7 +168,34 @@
 			"name": "Flag Evaluation",
 			"item": [
 				{
-					"name": "Simple Flag Evaluation",
+					"name": "Global Flag Evaluation (No User)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/evaluations/{{flagCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"evaluations",
+								"{{flagCode}}"
+							]
+						},
+						"description": "Evaluates a feature flag globally (kill switches, maintenance mode, etc.)"
+					}
+				},
+				{
+					"name": "User-Specific Flag Evaluation",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -191,7 +218,7 @@
 								"{{flagCode}}"
 							]
 						},
-						"description": "Evaluates a feature flag for a specific user"
+						"description": "Evaluates a feature flag for a specific user (A/B tests, rollouts, etc.)"
 					}
 				},
 				{
@@ -233,7 +260,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"subjectId\": \"{{userId}}\",\n  \"flagCodes\": [\"{{flagCode}}\", \"theme-color\"],\n  \"attributes\": {\n    \"plan\": \"premium\",\n    \"country\": \"US\"\n  }\n}"
+							"raw": "{\n  \"flagCodes\": [\"{{flagCode}}\", \"theme-color\"],\n  \"context\": {\n    \"subjectId\": \"{{userId}}\",\n    \"attributes\": {\n      \"plan\": \"premium\",\n      \"country\": \"US\"\n    }\n  }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/evaluations/bulk",

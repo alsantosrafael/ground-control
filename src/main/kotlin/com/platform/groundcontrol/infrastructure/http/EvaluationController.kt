@@ -61,8 +61,8 @@ class EvaluationController(
             
         } catch (e: Exception) {
             val duration = System.currentTimeMillis() - startTime
-            logger.error("Evaluation response: flagCode={}, subjectId={}, result=ERROR, error={}, durationMs={}", 
-                code, context.subjectId, e.message, duration, e)
+            logger.error("Evaluation response: flagCode={}, subjectId={}, result=ERROR, error={}, stackTrace={}, durationMs={}", 
+                code, context.subjectId, e.message, e.stackTrace.contentToString(), duration, e)
             return ResponseEntity.internalServerError().build()
             
         } finally {
