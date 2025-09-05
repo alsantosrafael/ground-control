@@ -19,7 +19,7 @@ class EvaluationEngineService(
         private val logger = LoggerFactory.getLogger(EvaluationEngineService::class.java)
     }
 
-    @Cacheable("evaluations", key = "#flag.code + ':' + (#context.subjectId ?: 'global')")
+    @Cacheable("evaluations", key = "#flag.code + ':' + (#context.subjectId ?: 'global') + ':' + #context.attributes.hashCode()")
     fun evaluate(flag: FeatureFlag, context: EvaluationContext): EvaluationResult {
         val startTime = System.currentTimeMillis()
         val flagCode = flag.code
@@ -34,7 +34,6 @@ class EvaluationEngineService(
             logger.debug("Starting flag evaluation: flag={}, subject={}, attributeCount={}", 
                 flagCode, subjectId, context.attributes.size)
             
-            // Early exit conditions with specific logging
             if (!flag.enabled) {
                 logger.info("Flag evaluation: DISABLED - flag={}, subject={}", flagCode, subjectId)
                 return EvaluationResult(

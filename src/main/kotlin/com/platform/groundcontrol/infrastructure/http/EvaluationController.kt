@@ -32,17 +32,14 @@ class EvaluationController(
         request: HttpServletRequest
     ): ResponseEntity<EvaluationResult> {
         val startTime = System.currentTimeMillis()
-        val clientIp = request.getHeader("X-Forwarded-For") ?: request.remoteAddr
-        val userAgent = request.getHeader("User-Agent") ?: "unknown"
-        
+
         MDC.put("endpoint", "POST /evaluations/{code}")
         MDC.put("flagCode", code)
         MDC.put("subjectId", context.subjectId)
-        MDC.put("clientIp", clientIp)
-        
+
         try {
-            logger.info("Evaluation request: method=POST, endpoint=/evaluations/{}, flagCode={}, subjectId={}, clientIp={}, userAgent={}", 
-                code, code, context.subjectId, clientIp, userAgent)
+            logger.info("Evaluation request: method=POST, endpoint=/evaluations/{}, flagCode={}, subjectId={}",
+                code, code, context.subjectId)
             
             val flag = featureFlagService.getByCode(code)
             val result = evaluationEngineService.evaluate(flag, context)
