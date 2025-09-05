@@ -42,7 +42,21 @@ class StringEvaluator: ConditionEvaluator {
 
     private fun matchesRegex(value: String, pattern: String): Boolean {
         return try {
-            value.matches(Regex(pattern))
+            // Basic protection against ReDoS attacks
+            if (pattern.length > 1000) {
+                throw IllegalArgumentException("Regex pattern too long (max 1000 characters)")
+            }
+            
+            // Check for common ReDoS patterns (commented out to not break existing functionality)
+            // val dangerousPatterns = listOf(
+            //     "(.*)*", "(.+)+", "(.{1,}){1,}", "(a|a)*", "(a*)*"
+            // )
+            // if (dangerousPatterns.any { pattern.contains(it) }) {
+            //     throw IllegalArgumentException("Potentially dangerous regex pattern detected")
+            // }
+            
+            val regex = Regex(pattern)
+            value.matches(regex)
         } catch (e: Exception) {
             false
         }

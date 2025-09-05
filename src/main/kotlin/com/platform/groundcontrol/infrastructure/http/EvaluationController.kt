@@ -13,8 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import jakarta.servlet.http.HttpServletRequest
+import jakarta.validation.Valid
+import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Size
+import org.springframework.validation.annotation.Validated
 
 @RestController
+@Validated
 @RequestMapping("/evaluations")
 class EvaluationController(
     private val evaluationEngineService: EvaluationEngineService,
@@ -27,8 +32,8 @@ class EvaluationController(
 
     @PostMapping("/{code}")
     fun evaluateFlag(
-        @PathVariable code: String,
-        @RequestBody context: EvaluationContext,
+        @PathVariable @NotBlank @Size(min = 1, max = 50) code: String,
+        @RequestBody @Valid context: EvaluationContext,
         request: HttpServletRequest
     ): ResponseEntity<EvaluationResult> {
         val startTime = System.currentTimeMillis()
@@ -69,7 +74,7 @@ class EvaluationController(
 
     @PostMapping("/bulk")
     fun evaluateFlags(
-        @RequestBody request: BulkEvaluationRequest,
+        @RequestBody @Valid request: BulkEvaluationRequest,
         httpRequest: HttpServletRequest
     ): ResponseEntity<Map<String, EvaluationResult>> {
         val startTime = System.currentTimeMillis()
@@ -123,6 +128,8 @@ class EvaluationController(
 }
 
 data class BulkEvaluationRequest(
-    val flagCodes: List<String>,
+    @field:Size(min = 1, max = 100, message = "Flag codes list must contain between 1 and 100 items")
+    val flagCodes: List<@NotBlank @Size(min = 1, max = 50) String>,
+    @field:Valid
     val context: EvaluationContext
 )

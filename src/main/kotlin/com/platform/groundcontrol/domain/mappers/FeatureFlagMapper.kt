@@ -9,7 +9,7 @@ import com.platform.groundcontrol.domain.mappers.RolloutRuleMapper.toEntity
 object FeatureFlagMapper {
 
     fun FeatureFlagEntity.toDomain(): FeatureFlag {
-        return FeatureFlag(
+        val featureFlag = FeatureFlag(
             id = this.id,
             code = this.code,
             name = this.name,
@@ -19,13 +19,17 @@ object FeatureFlagMapper {
                 FlagType.STRING -> this.defaultStringValue
                 FlagType.PERCENTAGE -> this.defaultPercentageValue
                 FlagType.BOOLEAN -> this.defaultBoolValue
-                else -> throw RuntimeException("Something went wrong")
+                null -> throw IllegalStateException("FlagType cannot be null")
             },
-            valueType = this.flagType ?: throw RuntimeException("FlagType is null"),
+            valueType = this.flagType ?: throw IllegalStateException("FlagType cannot be null"),
             enabled = this.enabled,
-            dueAt = this.dueAt,
-            rolloutRules = this.rolloutRules.map { it.toDomain() }.toMutableList()
+            dueAt = this.dueAt
         )
+        
+        // Add rollout rules after creation
+        featureFlag.rolloutRules.addAll(this.rolloutRules.map { it.toDomain() })
+        
+        return featureFlag
     }
 
     fun FeatureFlag.toEntity(): FeatureFlagEntity {
@@ -36,10 +40,30 @@ object FeatureFlagMapper {
             description = this.description,
             enabled = this.enabled,
             flagType = this.valueType,
-            defaultBoolValue = if (this.valueType == FlagType.BOOLEAN) this.value as? Boolean else null,
-            defaultIntValue = if (this.valueType == FlagType.INT) this.value as? Int else null,
-            defaultStringValue = if (this.valueType == FlagType.STRING) this.value as? String else null,
-            defaultPercentageValue = if (this.valueType == FlagType.PERCENTAGE) this.value as? Double else null,
+            defaultBoolValue = if (this.valueType == FlagType.BOOLEAN) {
+                when (val v = this.value) {
+                    is Boolean -> v
+                    else -> throw IllegalArgumentException("Value type mismatch: expected Boolean but got ${v?.javaClass?.simpleName}")
+                }
+            } else null,
+            defaultIntValue = if (this.valueType == FlagType.INT) {
+                when (val v = this.value) {
+                    is Int -> v
+                    else -> throw IllegalArgumentException("Value type mismatch: expected Int but got ${v?.javaClass?.simpleName}")
+                }
+            } else null,
+            defaultStringValue = if (this.valueType == FlagType.STRING) {
+                when (val v = this.value) {
+                    is String -> v
+                    else -> throw IllegalArgumentException("Value type mismatch: expected String but got ${v?.javaClass?.simpleName}")
+                }
+            } else null,
+            defaultPercentageValue = if (this.valueType == FlagType.PERCENTAGE) {
+                when (val v = this.value) {
+                    is Double -> v
+                    else -> throw IllegalArgumentException("Value type mismatch: expected Double but got ${v?.javaClass?.simpleName}")
+                }
+            } else null,
             createdAt = this.createdAt,
             updatedAt = this.updatedAt,
             dueAt = this.dueAt

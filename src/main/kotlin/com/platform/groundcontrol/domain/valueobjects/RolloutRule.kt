@@ -22,6 +22,17 @@ data class RolloutRule(
     var active: Boolean = true,
     val conditions: MutableList<Condition> = mutableListOf()
 ) : Serializable {
+    init {
+        // Validate time constraints
+        if (startAt != null && endAt != null) {
+            require(startAt!!.isBefore(endAt)) { "startAt must be before endAt" }
+        }
+        
+        // Validate percentage range
+        percentage?.let {
+            require(it >= 0.0 && it <= 100.0) { "Percentage must be between 0.0 and 100.0, got: $it" }
+        }
+    }
     fun getRuleValue(): Any? {
         return when {
             valueBool != null -> valueBool

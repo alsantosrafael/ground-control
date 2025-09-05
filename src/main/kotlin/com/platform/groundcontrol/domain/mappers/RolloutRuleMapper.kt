@@ -4,8 +4,8 @@ import com.platform.groundcontrol.domain.entities.RolloutRuleEntity
 import com.platform.groundcontrol.domain.valueobjects.RolloutRule
 
 object RolloutRuleMapper {
-    fun RolloutRuleEntity.toDomain(): RolloutRule =
-        RolloutRule(
+    fun RolloutRuleEntity.toDomain(): RolloutRule {
+        val rolloutRule = RolloutRule(
             id = this.id,
             featureFlagId = this.featureFlag?.id,
             attributeKey = this.attributeKey,
@@ -20,9 +20,14 @@ object RolloutRuleMapper {
             startAt = this.startAt,
             endAt = this.endAt,
             priority = this.priority,
-            active = this.active,
-            conditions = this.conditions
+            active = this.active
         )
+        
+        // Add conditions after creation
+        this.conditions?.let { rolloutRule.conditions.addAll(it) }
+        
+        return rolloutRule
+    }
 
     fun RolloutRule.toEntity(): RolloutRuleEntity =
         RolloutRuleEntity(
@@ -41,6 +46,6 @@ object RolloutRuleMapper {
             endAt = this.endAt,
             priority = this.priority ?: 0,
             active = this.active,
-            conditions = this.conditions
+            conditions = this.conditions.toMutableList()
         )
 }

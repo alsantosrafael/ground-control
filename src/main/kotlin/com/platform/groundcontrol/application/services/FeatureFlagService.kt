@@ -16,6 +16,7 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class FeatureFlagService(
@@ -25,7 +26,8 @@ class FeatureFlagService(
     companion object {
         private val logger = LoggerFactory.getLogger(FeatureFlagService::class.java)
     }
-    @CacheEvict(value = ["featureFlagByCode"], allEntries = true)
+    @Transactional
+    @CacheEvict(value = ["featureFlagByCode"], key = "#request.code")
     fun create(request: CreateFeatureFlag): FeatureFlag {
         val startTime = System.currentTimeMillis()
         val flagCode = request.code
@@ -137,7 +139,8 @@ class FeatureFlagService(
         }
     }
 
-    @CacheEvict(value = ["featureFlagByCode"], allEntries = true)
+    @Transactional
+    @CacheEvict(value = ["featureFlagByCode"], key = "#code")
     fun update(code: String, request: UpdateFeatureFlag) {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
@@ -150,7 +153,8 @@ class FeatureFlagService(
         featureFlagRepository.save(flag.toEntity())
     }
 
-    @CacheEvict(value = ["featureFlagByCode"], allEntries = true)
+    @Transactional
+    @CacheEvict(value = ["featureFlagByCode"], key = "#code")
     fun updateFeatureFlagStatus(code: String, request: UpdateFeatureFlagState) {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")

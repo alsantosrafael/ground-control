@@ -23,7 +23,7 @@ data class FeatureFlag(
         require(name.isNotBlank()) { "Feature flag name cannot be blank." }
         require(name.length <= 100) { "Feature flag name cannot exceed 100 characters." }
     }
-
+    
     fun enable() {
         if (!enabled) {
             enabled = true
@@ -42,6 +42,8 @@ data class FeatureFlag(
         var hasChanges = false
 
         newName?.let {
+            require(it.isNotBlank()) { "Feature flag name cannot be blank." }
+            require(it.length <= 100) { "Feature flag name cannot exceed 100 characters." }
             if (it != name) {
                 this.name = it
                 hasChanges = true
@@ -49,6 +51,8 @@ data class FeatureFlag(
         }
 
         newCode?.let {
+            require(it.matches(Regex("[a-zA-Z0-9_-]+"))) { "Feature flag code must contain only letters, numbers, hyphens, or underscores." }
+            require(it.length <= 50) { "Feature flag code cannot exceed 50 characters." }
             if (it != code) {
                 this.code = it
                 hasChanges = true

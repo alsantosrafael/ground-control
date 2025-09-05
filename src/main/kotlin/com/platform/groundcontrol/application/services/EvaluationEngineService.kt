@@ -5,10 +5,8 @@ import com.platform.groundcontrol.domain.evaluators.ConditionEvaluator
 import com.platform.groundcontrol.domain.valueobjects.*
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
-import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.time.Instant
-import kotlin.math.abs
 
 @Service
 class EvaluationEngineService(
@@ -19,7 +17,6 @@ class EvaluationEngineService(
         private val logger = LoggerFactory.getLogger(EvaluationEngineService::class.java)
     }
 
-    @Cacheable("evaluations", key = "#flag.code + ':' + (#context.subjectId ?: 'global') + ':' + #context.attributes.hashCode()")
     fun evaluate(flag: FeatureFlag, context: EvaluationContext): EvaluationResult {
         val startTime = System.currentTimeMillis()
         val flagCode = flag.code
@@ -54,7 +51,7 @@ class EvaluationEngineService(
             }
 
             val sortedRules = flag.rolloutRules.filter { it.active }
-                .sortedBy { it.priority ?: 0 }
+                .sortedWith(compareBy<RolloutRule> { it.priority ?: 1000 }.thenBy { it.id?.toString() ?: "" })
 
             logger.debug("Rule evaluation: flag={}, activeRules={}, totalRules={}", 
                 flagCode, sortedRules.size, flag.rolloutRules.size)
@@ -133,7 +130,7 @@ class EvaluationEngineService(
             if (context.subjectId == null) {
                 logger.debug("Rule evaluation: PERCENTAGE_SKIPPED - flag={}, ruleId={}, reason=no_subject_id", 
                     flagCode, ruleId)
-                false
+                return null // Skip this rule entirely if no subjectId for percentage rollout
             } else {
                 val passes = isSubjectInPercentage(context.subjectId, flag.code, percentage)
                 logger.debug("Rule evaluation: PERCENTAGE_CHECK - flag={}, ruleId={}, subject={}, percentage={}, passes={}", 
@@ -163,13 +160,13 @@ class EvaluationEngineService(
         val ruleId = rule.id
         
         // ALL conditions must pass (AND logic)
-        val results = rule.conditions.map { condition ->
+        val results = rule.conditions.takeIf { it.isNotEmpty() }?.map { condition ->
             val result = evaluateCondition(condition, context)
             logger.debug("Condition evaluation: flag={}, ruleId={}, attribute={}, operator={}, expected={}, actual={}, result={}", 
                 flagCode, ruleId, condition.attribute, condition.operator, condition.value, 
                 context.attributes[condition.attribute], result)
             result
-        }
+        } ?: emptyList()
         
         val allPassed = results.all { it }
         logger.debug("Conditions evaluation: flag={}, ruleId={}, total={}, passed={}, result={}", 
@@ -198,16 +195,26 @@ class EvaluationEngineService(
 
         return try {
             evaluator.evaluate(attributeValue, condition.value, condition.operator)
-        } catch (e: Exception) {
-            logger.warn("Condition evaluation: EVALUATOR_ERROR - attribute={}, operator={}, error={}", 
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Condition evaluation: INVALID_INPUT - attribute={}, operator={}, error={}", 
                 condition.attribute, condition.operator, e.message)
+            false
+        } catch (e: ClassCastException) {
+            logger.warn("Condition evaluation: TYPE_MISMATCH - attribute={}, operator={}, error={}", 
+                condition.attribute, condition.operator, e.message)
+            false
+        } catch (e: Exception) {
+            logger.error("Condition evaluation: UNEXPECTED_ERROR - attribute={}, operator={}, error={}", 
+                condition.attribute, condition.operator, e.message, e)
             false
         }
     }
 
     private fun isSubjectInPercentage(subjectId: String, flagCode: String, percentage: Double): Boolean {
-        val hash = "$flagCode:$subjectId".hashCode()
-        val bucket = abs(hash) % 100
-        return bucket < percentage.toInt()
+        require(percentage in 0.0..100.0) { "Percentage must be between 0.0 and 100.0, got: $percentage" }
+        
+        val hash = "$flagCode:$subjectId".hashCode().toLong()
+        val bucket = (hash and Long.MAX_VALUE) % 10000
+        return bucket < (percentage * 100).toLong()
     }
 }
