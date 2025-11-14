@@ -59,7 +59,7 @@ class FeatureFlagController(
     }
 
     @PutMapping("/{code}")
-    fun update(@PathVariable("code") code: String, @RequestBody request: UpdateFeatureFlag ): ResponseEntity<Void> {
+    fun update(@PathVariable("code") code: String, @RequestBody @Valid request: UpdateFeatureFlag): ResponseEntity<Void> {
         featureFlagService.update(code, request)
         return ResponseEntity.noContent().build()
     }
