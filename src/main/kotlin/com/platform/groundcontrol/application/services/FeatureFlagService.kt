@@ -31,14 +31,24 @@ class FeatureFlagService(
     fun create(request: CreateFeatureFlag): FeatureFlag {
         val startTime = System.currentTimeMillis()
         val flagCode = request.code
-        
+
         MDC.put("flagCode", flagCode)
         MDC.put("operation", "create")
-        
+
         try {
-            logger.info("Creating feature flag: code={}, name={}, valueType={}, enabled={}", 
+            logger.info("Creating feature flag: code={}, name={}, valueType={}, enabled={}",
                 flagCode, request.name, request.valueType, request.enabled)
-            
+
+            // Proactive check: verify code doesn't already exist
+            if (featureFlagRepository.existsByCode(flagCode)) {
+                throw IllegalStateException("A feature flag with code '$flagCode' already exists. Please use a different code.")
+            }
+
+            // Proactive check: verify name doesn't already exist
+            if (featureFlagRepository.existsByName(request.name)) {
+                throw IllegalStateException("A feature flag with name '${request.name}' already exists. Please use a different name.")
+            }
+
             val ff = FeatureFlag(
                 id = null,
                 code = request.code,
@@ -49,19 +59,19 @@ class FeatureFlagService(
                 enabled = request.enabled,
                 dueAt = request.dueAt
             )
-            
+
             val createdFF = featureFlagRepository.save(ff.toEntity())
             val result = createdFF.toDomain()
             val duration = System.currentTimeMillis() - startTime
-            
-            logger.info("Feature flag created: code={}, id={}, durationMs={}", 
+
+            logger.info("Feature flag created: code={}, id={}, durationMs={}",
                 flagCode, result.id, duration)
-            
+
             return result
-            
+
         } catch (e: Exception) {
             val duration = System.currentTimeMillis() - startTime
-            logger.error("Feature flag creation failed: code={}, error={}, durationMs={}", 
+            logger.error("Feature flag creation failed: code={}, error={}, durationMs={}",
                 flagCode, e.message, duration, e)
             throw e
         } finally {

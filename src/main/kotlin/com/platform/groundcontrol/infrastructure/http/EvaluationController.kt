@@ -2,6 +2,9 @@ package com.platform.groundcontrol.infrastructure.http
 
 import com.platform.groundcontrol.application.services.EvaluationEngineService
 import com.platform.groundcontrol.application.services.FeatureFlagService
+import com.platform.groundcontrol.domain.valueobjects.BulkEvaluationRequest
+import com.platform.groundcontrol.domain.valueobjects.BulkEvaluationResponse
+import com.platform.groundcontrol.domain.valueobjects.BulkEvaluationSummary
 import com.platform.groundcontrol.domain.valueobjects.EvaluationContext
 import com.platform.groundcontrol.domain.valueobjects.EvaluationResult
 import org.slf4j.LoggerFactory
@@ -126,26 +129,3 @@ class EvaluationController(
         }
     }
 }
-
-data class BulkEvaluationRequest(
-    @field:Size(
-        min = EvaluationController.MIN_BULK_FLAGS,
-        max = EvaluationController.MAX_BULK_FLAGS,
-        message = "Flag codes list must contain between ${EvaluationController.MIN_BULK_FLAGS} and ${EvaluationController.MAX_BULK_FLAGS} items"
-    )
-    val flagCodes: List<@NotBlank @Size(min = 1, max = EvaluationController.MAX_FLAG_CODE_LENGTH) String>,
-    @field:Valid
-    val context: EvaluationContext
-)
-
-data class BulkEvaluationResponse(
-    val results: Map<String, EvaluationResult>,
-    val errors: Map<String, String>,
-    val summary: BulkEvaluationSummary
-)
-
-data class BulkEvaluationSummary(
-    val requested: Int,
-    val successful: Int,
-    val failed: Int
-)

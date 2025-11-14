@@ -85,6 +85,62 @@ class GlobalExceptionHandler {
         return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException::class)
+    fun handleDataIntegrityViolation(ex: org.springframework.dao.DataIntegrityViolationException): ResponseEntity<ErrorResponse> {
+        val rootCause = ex.rootCause?.message ?: ex.message ?: ""
+
+        // Parse user-friendly message from database constraint
+        val userMessage = when {
+            rootCause.contains("unique constraint", ignoreCase = true) ||
+            rootCause.contains("duplicate key", ignoreCase = true) -> {
+                when {
+                    rootCause.contains("code", ignoreCase = true) ->
+                        "A feature flag with this code already exists. Please use a different code."
+                    rootCause.contains("name", ignoreCase = true) ->
+                        "A feature flag with this name already exists. Please use a different name."
+                    else ->
+                        "This resource already exists. Please check your input and try again."
+                }
+            }
+            rootCause.contains("foreign key", ignoreCase = true) ||
+            rootCause.contains("violates foreign key constraint", ignoreCase = true) -> {
+                "Cannot perform this operation because it references data that is being used elsewhere."
+            }
+            rootCause.contains("not-null", ignoreCase = true) ||
+            rootCause.contains("null value", ignoreCase = true) -> {
+                "A required field is missing. Please provide all required information."
+            }
+            rootCause.contains("check constraint", ignoreCase = true) -> {
+                "The provided value does not meet the required criteria. Please check your input."
+            }
+            else -> {
+                "Unable to complete the operation due to a data constraint. Please review your input."
+            }
+        }
+
+        logger.warn("Data integrity violation: {} - Root cause: {}", userMessage, rootCause)
+
+        val errorResponse = ErrorResponse(
+            timestamp = Instant.now(),
+            status = HttpStatus.CONFLICT.value(),
+            error = "Conflict",
+            message = userMessage
+        )
+        return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
+    }
+
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException::class)
+    fun handleOptimisticLocking(ex: org.springframework.orm.ObjectOptimisticLockingFailureException): ResponseEntity<ErrorResponse> {
+        logger.warn("Optimistic locking failure: {}", ex.message)
+        val errorResponse = ErrorResponse(
+            timestamp = Instant.now(),
+            status = HttpStatus.CONFLICT.value(),
+            error = "Conflict",
+            message = "This resource was modified by another user. Please refresh and try again."
+        )
+        return ResponseEntity(errorResponse, HttpStatus.CONFLICT)
+    }
+
     @ExceptionHandler(Exception::class)
     fun handleGenericException(ex: Exception): ResponseEntity<ErrorResponse> {
         logger.error("Unexpected error: ${ex.message}", ex)

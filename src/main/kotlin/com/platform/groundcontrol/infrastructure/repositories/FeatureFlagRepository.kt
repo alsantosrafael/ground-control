@@ -21,7 +21,11 @@ interface FeatureFlagRepository : JpaRepository<FeatureFlagEntity, Long> {
     
     @Query("SELECT f FROM FeatureFlagEntity f WHERE f.enabled = :enabled ORDER BY f.updatedAt DESC")
     fun findByEnabledOrderByUpdatedAtDesc(@Param("enabled") enabled: Boolean): List<FeatureFlagEntity>
-    
+
     @Query("SELECT COUNT(f) FROM FeatureFlagEntity f WHERE f.enabled = true")
     fun countEnabledFlags(): Long
+
+    fun existsByCode(code: String): Boolean
+
+    fun existsByName(name: String): Boolean
 }
