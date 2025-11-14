@@ -1,4 +1,4 @@
-package com.platform.groundcontrol.infrastructure.config
+package com.platform.groundcontrol.application.configuration
 
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
@@ -33,11 +33,13 @@ class OpenApiConfig {
                         - 📈 **Monitoring**: Built-in metrics and observability
                         
                         ## Getting Started
-                        
-                        1. **Create a feature flag** using the POST `/api/flags` endpoint
-                        2. **Evaluate the flag** using GET `/api/evaluate/{flagCode}`
+
+                        1. **Create a feature flag** using the POST `/v1/flags` endpoint
+                        2. **Evaluate the flag** using POST `/v1/evaluations/{flagCode}`
                         3. **Add rollout rules** for targeting specific users or gradual rollouts
                         4. **Monitor usage** through the `/actuator/metrics` endpoint
+
+                        **Note**: All API endpoints are versioned with `/v1/` prefix.
                         
                         ## Flag Evaluation
                         
@@ -77,8 +79,8 @@ class OpenApiConfig {
             )
             .servers(
                 listOf(
-                    Server().url("http://localhost:8080").description("Local development server"),
-                    Server().url("https://api.groundcontrol.dev").description("Production server")
+                    Server().url("http://localhost:8080/v1").description("Local development server (v1)"),
+                    Server().url("https://api.groundcontrol.dev/v1").description("Production server (v1)")
                 )
             )
             .tags(
