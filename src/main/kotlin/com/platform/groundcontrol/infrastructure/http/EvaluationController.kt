@@ -50,28 +50,16 @@ class EvaluationController(
         try {
             logger.info("Evaluation request: method=POST, endpoint=/v1/evaluations/{}, flagCode={}, subjectId={}",
                 code, code, context.subjectId)
-            
+
             val flag = featureFlagService.getByCode(code)
             val result = evaluationEngineService.evaluate(flag, context)
             val duration = System.currentTimeMillis() - startTime
-            
-            logger.info("Evaluation response: flagCode={}, subjectId={}, result={}, enabled={}, reason={}, durationMs={}", 
+
+            logger.info("Evaluation response: flagCode={}, subjectId={}, result={}, enabled={}, reason={}, durationMs={}",
                 code, context.subjectId, "SUCCESS", result.enabled, result.reason, duration)
-            
+
             return ResponseEntity.ok(result)
-            
-        } catch (e: NoSuchElementException) {
-            val duration = System.currentTimeMillis() - startTime
-            logger.warn("Evaluation response: flagCode={}, subjectId={}, result=NOT_FOUND, durationMs={}", 
-                code, context.subjectId, duration)
-            return ResponseEntity.notFound().build()
-            
-        } catch (e: Exception) {
-            val duration = System.currentTimeMillis() - startTime
-            logger.error("Evaluation response: flagCode={}, subjectId={}, result=ERROR, error={}, stackTrace={}, durationMs={}", 
-                code, context.subjectId, e.message, e.stackTrace.contentToString(), duration, e)
-            return ResponseEntity.internalServerError().build()
-            
+
         } finally {
             MDC.clear()
         }
@@ -81,24 +69,25 @@ class EvaluationController(
     fun evaluateFlags(
         @RequestBody @Valid request: BulkEvaluationRequest,
         httpRequest: HttpServletRequest
-    ): ResponseEntity<Map<String, EvaluationResult>> {
+    ): ResponseEntity<BulkEvaluationResponse> {
         val startTime = System.currentTimeMillis()
         val clientIp = httpRequest.getHeader("X-Forwarded-For") ?: httpRequest.remoteAddr
         val userAgent = httpRequest.getHeader("User-Agent") ?: "unknown"
-        
+
         MDC.put("endpoint", "POST /v1/evaluations/bulk")
         MDC.put("subjectId", request.context.subjectId)
         MDC.put("clientIp", clientIp)
-        
+
         try {
-            logger.info("Bulk evaluation request: flagCount={}, subjectId={}, clientIp={}, userAgent={}, flags={}", 
+            logger.info("Bulk evaluation request: flagCount={}, subjectId={}, clientIp={}, userAgent={}, flags={}",
                 request.flagCodes.size, request.context.subjectId, clientIp, userAgent, request.flagCodes)
-            
+
             val results = mutableMapOf<String, EvaluationResult>()
+            val errors = mutableMapOf<String, String>()
             var successCount = 0
             var notFoundCount = 0
             var errorCount = 0
-            
+
             for (flagCode in request.flagCodes) {
                 try {
                     val flag = featureFlagService.getByCode(flagCode)
@@ -107,25 +96,31 @@ class EvaluationController(
                     successCount++
                 } catch (e: NoSuchElementException) {
                     notFoundCount++
+                    errors[flagCode] = "Flag not found"
                     logger.debug("Bulk evaluation: flag not found - flagCode={}", flagCode)
                 } catch (e: Exception) {
                     errorCount++
+                    errors[flagCode] = e.message ?: "Evaluation error"
                     logger.warn("Bulk evaluation: flag error - flagCode={}, error={}", flagCode, e.message)
                 }
             }
-            
+
             val duration = System.currentTimeMillis() - startTime
-            logger.info("Bulk evaluation response: subjectId={}, requested={}, successful={}, notFound={}, errors={}, durationMs={}", 
+            logger.info("Bulk evaluation response: subjectId={}, requested={}, successful={}, notFound={}, errors={}, durationMs={}",
                 request.context.subjectId, request.flagCodes.size, successCount, notFoundCount, errorCount, duration)
-            
-            return ResponseEntity.ok(results)
-            
-        } catch (e: Exception) {
-            val duration = System.currentTimeMillis() - startTime
-            logger.error("Bulk evaluation error: subjectId={}, error={}, durationMs={}", 
-                request.context.subjectId, e.message, duration, e)
-            return ResponseEntity.internalServerError().build()
-            
+
+            return ResponseEntity.ok(
+                BulkEvaluationResponse(
+                    results = results,
+                    errors = errors,
+                    summary = BulkEvaluationSummary(
+                        requested = request.flagCodes.size,
+                        successful = successCount,
+                        failed = notFoundCount + errorCount
+                    )
+                )
+            )
+
         } finally {
             MDC.clear()
         }
@@ -141,4 +136,16 @@ data class BulkEvaluationRequest(
     val flagCodes: List<@NotBlank @Size(min = 1, max = EvaluationController.MAX_FLAG_CODE_LENGTH) String>,
     @field:Valid
     val context: EvaluationContext
+)
+
+data class BulkEvaluationResponse(
+    val results: Map<String, EvaluationResult>,
+    val errors: Map<String, String>,
+    val summary: BulkEvaluationSummary
+)
+
+data class BulkEvaluationSummary(
+    val requested: Int,
+    val successful: Int,
+    val failed: Int
 )

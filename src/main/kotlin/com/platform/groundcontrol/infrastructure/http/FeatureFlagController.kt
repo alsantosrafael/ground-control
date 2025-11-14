@@ -6,10 +6,12 @@ import com.platform.groundcontrol.domain.valueobjects.FeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.FindByCodes
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlag
 import com.platform.groundcontrol.domain.valueobjects.UpdateFeatureFlagState
+import jakarta.validation.Valid
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -22,13 +24,14 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
+@Validated
 @RequestMapping("/v1/flags")
 class FeatureFlagController(
     val featureFlagService: FeatureFlagService
 ) {
 
     @PostMapping
-    fun create(@RequestBody request: CreateFeatureFlag): ResponseEntity<FeatureFlag>  {
+    fun create(@RequestBody @Valid request: CreateFeatureFlag): ResponseEntity<FeatureFlag>  {
         return ResponseEntity
             .created(URI("/v1/flags"))
             .body(featureFlagService.create(request))

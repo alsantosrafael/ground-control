@@ -12,9 +12,15 @@ import java.time.Instant
 class EvaluationEngineService(
     private val conditionEvaluators: List<ConditionEvaluator>
 ) {
-    
+
     companion object {
         private val logger = LoggerFactory.getLogger(EvaluationEngineService::class.java)
+
+        // Percentage rollout constants
+        const val PERCENTAGE_BUCKET_SIZE = 10000
+        const val PERCENTAGE_MULTIPLIER = 100.0
+        const val MIN_PERCENTAGE = 0.0
+        const val MAX_PERCENTAGE = 100.0
     }
 
     fun evaluate(flag: FeatureFlag, context: EvaluationContext): EvaluationResult {
@@ -211,10 +217,12 @@ class EvaluationEngineService(
     }
 
     private fun isSubjectInPercentage(subjectId: String, flagCode: String, percentage: Double): Boolean {
-        require(percentage in 0.0..100.0) { "Percentage must be between 0.0 and 100.0, got: $percentage" }
-        
+        require(percentage in MIN_PERCENTAGE..MAX_PERCENTAGE) {
+            "Percentage must be between $MIN_PERCENTAGE and $MAX_PERCENTAGE, got: $percentage"
+        }
+
         val hash = "$flagCode:$subjectId".hashCode().toLong()
-        val bucket = (hash and Long.MAX_VALUE) % 10000
-        return bucket < (percentage * 100).toLong()
+        val bucket = (hash and Long.MAX_VALUE) % PERCENTAGE_BUCKET_SIZE
+        return bucket < (percentage * PERCENTAGE_MULTIPLIER).toLong()
     }
 }
