@@ -28,11 +28,16 @@ class EvaluationController(
     
     companion object {
         private val logger = LoggerFactory.getLogger(EvaluationController::class.java)
+
+        // Request validation constants
+        const val MAX_FLAG_CODE_LENGTH = 50
+        const val MIN_BULK_FLAGS = 1
+        const val MAX_BULK_FLAGS = 100
     }
 
     @PostMapping("/{code}")
     fun evaluateFlag(
-        @PathVariable @NotBlank @Size(min = 1, max = 50) code: String,
+        @PathVariable @NotBlank @Size(min = 1, max = MAX_FLAG_CODE_LENGTH) code: String,
         @RequestBody @Valid context: EvaluationContext,
         request: HttpServletRequest
     ): ResponseEntity<EvaluationResult> {
@@ -128,8 +133,12 @@ class EvaluationController(
 }
 
 data class BulkEvaluationRequest(
-    @field:Size(min = 1, max = 100, message = "Flag codes list must contain between 1 and 100 items")
-    val flagCodes: List<@NotBlank @Size(min = 1, max = 50) String>,
+    @field:Size(
+        min = EvaluationController.MIN_BULK_FLAGS,
+        max = EvaluationController.MAX_BULK_FLAGS,
+        message = "Flag codes list must contain between ${EvaluationController.MIN_BULK_FLAGS} and ${EvaluationController.MAX_BULK_FLAGS} items"
+    )
+    val flagCodes: List<@NotBlank @Size(min = 1, max = EvaluationController.MAX_FLAG_CODE_LENGTH) String>,
     @field:Valid
     val context: EvaluationContext
 )
