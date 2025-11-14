@@ -154,6 +154,19 @@ class FeatureFlagService(
     fun update(code: String, request: UpdateFeatureFlag) {
         val flag = featureFlagRepository.findByCode(code)?.toDomain()
             ?: throw NoSuchElementException("Feature flag with code '$code' not found")
+
+        if (request.code != null && request.code != flag.code) {
+            if (featureFlagRepository.existsByCode(request.code)) {
+                throw IllegalStateException("A feature flag with code '${request.code}' already exists. Please use a different code.")
+            }
+        }
+
+        if (request.name != null && request.name != flag.name) {
+            if (featureFlagRepository.existsByName(request.name)) {
+                throw IllegalStateException("A feature flag with name '${request.name}' already exists. Please use a different name.")
+            }
+        }
+
         flag.updateWith{
             withName(request.name)
             withCode(request.code)

@@ -326,11 +326,201 @@ class FeatureFlagServiceTest {
             )
 
             `when`(mockRepository.findByCode(code)).thenReturn(existingEntity)
+            `when`(mockRepository.existsByCode("new-code")).thenReturn(false)
+            `when`(mockRepository.existsByName("New Name")).thenReturn(false)
             `when`(mockRepository.save(any(FeatureFlagEntity::class.java))).thenReturn(existingEntity)
 
             service.update(code, updateRequest)
 
             verify(mockRepository).findByCode(code)
+            verify(mockRepository).existsByCode("new-code")
+            verify(mockRepository).existsByName("New Name")
+            verify(mockRepository).save(any(FeatureFlagEntity::class.java))
+        }
+
+        @Test
+        fun `should throw IllegalStateException when updating to duplicate code`() {
+            val code = "original-code"
+            val existingEntity = createTestEntity(
+                id = 1L,
+                code = code,
+                name = "Original Name"
+            )
+
+            val updateRequest = UpdateFeatureFlag(
+                code = "duplicate-code",
+                name = "New Name",
+                description = "Updated description",
+                dueAt = null
+            )
+
+            `when`(mockRepository.findByCode(code)).thenReturn(existingEntity)
+            `when`(mockRepository.existsByCode("duplicate-code")).thenReturn(true)
+
+            val exception = assertThrows<IllegalStateException> {
+                service.update(code, updateRequest)
+            }
+
+            assertEquals(
+                "A feature flag with code 'duplicate-code' already exists. Please use a different code.",
+                exception.message
+            )
+
+            verify(mockRepository).findByCode(code)
+            verify(mockRepository).existsByCode("duplicate-code")
+            verify(mockRepository, never()).existsByName(anyString())
+            verify(mockRepository, never()).save(any(FeatureFlagEntity::class.java))
+        }
+
+        @Test
+        fun `should throw IllegalStateException when updating to duplicate name`() {
+            val code = "original-code"
+            val existingEntity = createTestEntity(
+                id = 1L,
+                code = code,
+                name = "Original Name"
+            )
+
+            val updateRequest = UpdateFeatureFlag(
+                code = "new-code",
+                name = "Duplicate Name",
+                description = "Updated description",
+                dueAt = null
+            )
+
+            `when`(mockRepository.findByCode(code)).thenReturn(existingEntity)
+            `when`(mockRepository.existsByCode("new-code")).thenReturn(false)
+            `when`(mockRepository.existsByName("Duplicate Name")).thenReturn(true)
+
+            val exception = assertThrows<IllegalStateException> {
+                service.update(code, updateRequest)
+            }
+
+            assertEquals(
+                "A feature flag with name 'Duplicate Name' already exists. Please use a different name.",
+                exception.message
+            )
+
+            verify(mockRepository).findByCode(code)
+            verify(mockRepository).existsByCode("new-code")
+            verify(mockRepository).existsByName("Duplicate Name")
+            verify(mockRepository, never()).save(any(FeatureFlagEntity::class.java))
+        }
+
+        @Test
+        fun `should not check for duplicates when code is not being changed`() {
+            val code = "same-code"
+            val existingEntity = createTestEntity(
+                id = 1L,
+                code = code,
+                name = "Original Name"
+            )
+
+            val updateRequest = UpdateFeatureFlag(
+                code = code, // Same code as original
+                name = "New Name",
+                description = "Updated description",
+                dueAt = null
+            )
+
+            `when`(mockRepository.findByCode(code)).thenReturn(existingEntity)
+            `when`(mockRepository.existsByName("New Name")).thenReturn(false)
+            `when`(mockRepository.save(any(FeatureFlagEntity::class.java))).thenReturn(existingEntity)
+
+            service.update(code, updateRequest)
+
+            verify(mockRepository).findByCode(code)
+            verify(mockRepository, never()).existsByCode(anyString()) // Should not check code
+            verify(mockRepository).existsByName("New Name")
+            verify(mockRepository).save(any(FeatureFlagEntity::class.java))
+        }
+
+        @Test
+        fun `should not check for duplicates when name is not being changed`() {
+            val code = "some-code"
+            val existingEntity = createTestEntity(
+                id = 1L,
+                code = code,
+                name = "Same Name"
+            )
+
+            val updateRequest = UpdateFeatureFlag(
+                code = "new-code",
+                name = "Same Name", // Same name as original
+                description = "Updated description",
+                dueAt = null
+            )
+
+            `when`(mockRepository.findByCode(code)).thenReturn(existingEntity)
+            `when`(mockRepository.existsByCode("new-code")).thenReturn(false)
+            `when`(mockRepository.save(any(FeatureFlagEntity::class.java))).thenReturn(existingEntity)
+
+            service.update(code, updateRequest)
+
+            verify(mockRepository).findByCode(code)
+            verify(mockRepository).existsByCode("new-code")
+            verify(mockRepository, never()).existsByName(anyString()) // Should not check name
+            verify(mockRepository).save(any(FeatureFlagEntity::class.java))
+        }
+
+        @Test
+        fun `should update only description without checking duplicates`() {
+            val code = "some-code"
+            val existingEntity = createTestEntity(
+                id = 1L,
+                code = code,
+                name = "Some Name"
+            )
+
+            val updateRequest = UpdateFeatureFlag(
+                code = null, // Not updating code
+                name = null, // Not updating name
+                description = "New description only",
+                dueAt = null
+            )
+
+            `when`(mockRepository.findByCode(code)).thenReturn(existingEntity)
+            `when`(mockRepository.save(any(FeatureFlagEntity::class.java))).thenReturn(existingEntity)
+
+            service.update(code, updateRequest)
+
+            verify(mockRepository).findByCode(code)
+            verify(mockRepository, never()).existsByCode(anyString())
+            verify(mockRepository, never()).existsByName(anyString())
+            verify(mockRepository).save(any(FeatureFlagEntity::class.java))
+        }
+
+        @Test
+        fun `should handle race condition in update when duplicate is created between check and save`() {
+            val code = "original-code"
+            val existingEntity = createTestEntity(
+                id = 1L,
+                code = code,
+                name = "Original Name"
+            )
+
+            val updateRequest = UpdateFeatureFlag(
+                code = "new-code",
+                name = "New Name",
+                description = "Updated",
+                dueAt = null
+            )
+
+            `when`(mockRepository.findByCode(code)).thenReturn(existingEntity)
+            `when`(mockRepository.existsByCode("new-code")).thenReturn(false)
+            `when`(mockRepository.existsByName("New Name")).thenReturn(false)
+
+            // Race condition: duplicate created by another thread between check and save
+            val dbException = DataIntegrityViolationException("Unique constraint violation")
+            `when`(mockRepository.save(any(FeatureFlagEntity::class.java))).thenThrow(dbException)
+
+            assertThrows<DataIntegrityViolationException> {
+                service.update(code, updateRequest)
+            }
+
+            verify(mockRepository).findByCode(code)
+            verify(mockRepository).existsByCode("new-code")
+            verify(mockRepository).existsByName("New Name")
             verify(mockRepository).save(any(FeatureFlagEntity::class.java))
         }
 
