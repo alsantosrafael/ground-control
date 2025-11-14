@@ -23,19 +23,20 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
 	implementation 'org.jetbrains.kotlin:kotlin-reflect'
-	
+	implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+
 	// Database
 	runtimeOnly 'org.postgresql:postgresql'
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.flywaydb:flyway-database-postgresql'
-	
+
 	// Redis Cache
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
-	
+
 	// Bean Validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	
+
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.jetbrains.kotlin:kotlin-test-junit5'
@@ -43,6 +44,9 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 	implementation 'io.micrometer:micrometer-registry-prometheus'
+
+	// Rate Limiting
+	implementation 'io.github.bucket4j:bucket4j-core:8.10.1'
 }
 
 kotlin {
