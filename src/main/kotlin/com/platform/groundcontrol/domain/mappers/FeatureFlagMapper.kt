@@ -60,6 +60,7 @@ object FeatureFlagMapper {
             defaultPercentageValue = if (this.valueType == FlagType.PERCENTAGE) {
                 when (val v = this.value) {
                     is Double -> v
+                    is Int -> v.toDouble()
                     else -> throw IllegalArgumentException("Value type mismatch: expected Double but got ${v?.javaClass?.simpleName}")
                 }
             } else null,
