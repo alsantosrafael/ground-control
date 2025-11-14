@@ -37,7 +37,7 @@ class FeatureFlagEntity(
 
     @Enumerated(EnumType.STRING)
     @Column(name = "flag_type", nullable = false)
-    var flagType: FlagType? = FlagType.BOOLEAN,
+    var flagType: FlagType = FlagType.BOOLEAN,
 
     @Column(name = "default_bool_value")
     var defaultBoolValue: Boolean? = null,

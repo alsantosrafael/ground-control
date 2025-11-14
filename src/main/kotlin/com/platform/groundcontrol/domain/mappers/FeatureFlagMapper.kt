@@ -19,9 +19,8 @@ object FeatureFlagMapper {
                 FlagType.STRING -> this.defaultStringValue
                 FlagType.PERCENTAGE -> this.defaultPercentageValue
                 FlagType.BOOLEAN -> this.defaultBoolValue
-                null -> throw IllegalStateException("FlagType cannot be null")
             },
-            valueType = this.flagType ?: throw IllegalStateException("FlagType cannot be null"),
+            valueType = this.flagType,
             enabled = this.enabled,
             dueAt = this.dueAt
         )

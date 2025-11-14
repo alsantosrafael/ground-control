@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 @RestController
-@RequestMapping("/flags")
+@RequestMapping("/v1/flags")
 class FeatureFlagController(
     val featureFlagService: FeatureFlagService
 ) {
@@ -30,7 +30,7 @@ class FeatureFlagController(
     @PostMapping
     fun create(@RequestBody request: CreateFeatureFlag): ResponseEntity<FeatureFlag>  {
         return ResponseEntity
-            .created(URI("/flags"))
+            .created(URI("/v1/flags"))
             .body(featureFlagService.create(request))
     }
 

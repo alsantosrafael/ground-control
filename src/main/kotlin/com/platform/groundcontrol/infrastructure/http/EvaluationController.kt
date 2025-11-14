@@ -20,7 +20,7 @@ import org.springframework.validation.annotation.Validated
 
 @RestController
 @Validated
-@RequestMapping("/evaluations")
+@RequestMapping("/v1/evaluations")
 class EvaluationController(
     private val evaluationEngineService: EvaluationEngineService,
     private val featureFlagService: FeatureFlagService
@@ -38,12 +38,12 @@ class EvaluationController(
     ): ResponseEntity<EvaluationResult> {
         val startTime = System.currentTimeMillis()
 
-        MDC.put("endpoint", "POST /evaluations/{code}")
+        MDC.put("endpoint", "POST /v1/evaluations/{code}")
         MDC.put("flagCode", code)
         MDC.put("subjectId", context.subjectId)
 
         try {
-            logger.info("Evaluation request: method=POST, endpoint=/evaluations/{}, flagCode={}, subjectId={}",
+            logger.info("Evaluation request: method=POST, endpoint=/v1/evaluations/{}, flagCode={}, subjectId={}",
                 code, code, context.subjectId)
             
             val flag = featureFlagService.getByCode(code)
@@ -81,7 +81,7 @@ class EvaluationController(
         val clientIp = httpRequest.getHeader("X-Forwarded-For") ?: httpRequest.remoteAddr
         val userAgent = httpRequest.getHeader("User-Agent") ?: "unknown"
         
-        MDC.put("endpoint", "POST /evaluations/bulk")
+        MDC.put("endpoint", "POST /v1/evaluations/bulk")
         MDC.put("subjectId", request.context.subjectId)
         MDC.put("clientIp", clientIp)
         
