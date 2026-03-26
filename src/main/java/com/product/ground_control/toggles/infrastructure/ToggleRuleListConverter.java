@@ -11,17 +11,21 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * JPA converter for handling JSONB storage of rule definitions.
+ * Reuses a single ObjectMapper instance for performance.
+ */
 @Converter(autoApply = true)
 public class ToggleRuleListConverter implements AttributeConverter<List<ToggleRuleDefinition>, String> {
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module());
 
     @Override
     public String convertToDatabaseColumn(List<ToggleRuleDefinition> attribute) {
         if (attribute == null) return "[]";
         try {
-            return objectMapper.writeValueAsString(attribute);
+            return OBJECT_MAPPER.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Error converting rule list to JSON", e);
         }
@@ -31,7 +35,7 @@ public class ToggleRuleListConverter implements AttributeConverter<List<ToggleRu
     public List<ToggleRuleDefinition> convertToEntityAttribute(String dbData) {
         if (dbData == null || dbData.isEmpty()) return Collections.emptyList();
         try {
-            return objectMapper.readValue(dbData, new TypeReference<List<ToggleRuleDefinition>>() {});
+            return OBJECT_MAPPER.readValue(dbData, new TypeReference<List<ToggleRuleDefinition>>() {});
         } catch (IOException e) {
             throw new RuntimeException("Error converting JSON to rule list", e);
         }

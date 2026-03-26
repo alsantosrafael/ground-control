@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class ToggleEvaluatorTest {
 
@@ -141,26 +143,22 @@ class ToggleEvaluatorTest {
         assertEquals("disabled", evaluator.evaluate(feature, Map.of("tier", "BASIC", "userId", vipIn)));
     }
 
-    @Test
-    void shouldHandleComparisonOperators() {
-        var ruleAge = new ToggleRuleDefinition(
-            1,
-            List.of(new ToggleRuleCondition("age", Operator.GREATER_OR_EQUAL, "18")),
-            "adult",
-            null, null
-        );
-
-        var feature = new FeatureFlag(
-            UUID.randomUUID(),
-            "comparison_test",
-            FeatureType.STRING,
-            List.of(ruleAge),
-            "unknown",
-            LocalDateTime.now(),
-            LocalDateTime.now()
-        );
-
-        assertEquals("adult", evaluator.evaluate(feature, Map.of("age", "20")));
-        assertEquals("unknown", evaluator.evaluate(feature, Map.of("age", "15")));
+    @ParameterizedTest
+    @CsvSource({
+        "GREATER_THAN, 20, 18, true",
+        "GREATER_THAN, 18, 20, false",
+        "GREATER_THAN, 18, 18, false",
+        "GREATER_OR_EQUAL, 18, 18, true",
+        "LESS_THAN, 15, 18, true",
+        "LESS_OR_EQUAL, 18, 18, true",
+        "NOT_EQUALS, v2, v1, true",
+        "NOT_EQUALS, v1, v1, false",
+        "EQUALS, v1, v1, true",
+        "CONTAINS, beta-v1, beta, true"
+    })
+    void shouldVerifyOperator(Operator operator, String actual, String expected, boolean shouldMatch) {
+        var condition = new ToggleRuleCondition("prop", operator, expected);
+        assertEquals(shouldMatch, condition.matches(actual), 
+            String.format("Failed for %s: %s vs %s", operator, actual, expected));
     }
 }

@@ -20,7 +20,7 @@ public record ToggleRuleCondition(
             case GREATER_OR_EQUAL -> compareNumerically(contextValue, value) >= 0;
             case LESS_THAN -> compareNumerically(contextValue, value) < 0;
             case LESS_OR_EQUAL -> compareNumerically(contextValue, value) <= 0;
-            case PERCENTAGE -> true; // Handled at Rule level now, but kept for enum compatibility
+            case PERCENTAGE -> throw new IllegalStateException("PERCENTAGE operator must be handled at the Rule level");
         };
     }
 
