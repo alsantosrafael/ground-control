@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.product.ground_control.toggles.api;
+
+option java_multiple_files = true;
+option java_package = "com.product.ground_control.toggles.api.grpc";
+option java_outer_classname = "EvaluationProto";
+
+message EvalRequest {
+  string featureKey = 1;
+  map<string, string> context = 2;
+}
+
+message EvalResponse {
+  string result = 1;
+  string type = 2;
+  string featureKey = 3;
+}
+
+service EvaluationService {
+  rpc Evaluate (EvalRequest) returns (EvalResponse);
+}

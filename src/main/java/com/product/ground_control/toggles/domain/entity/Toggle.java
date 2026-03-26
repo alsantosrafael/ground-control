@@ -1,7 +1,8 @@
-package com.product.ground_control.toggles.infrastructure;
+package com.product.ground_control.toggles.domain.entity;
 
 import com.product.ground_control.toggles.domain.FeatureType;
 import com.product.ground_control.toggles.domain.model.ToggleRuleDefinition;
+import com.product.ground_control.toggles.domain.model.ToggleRuleListConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -13,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -51,6 +53,26 @@ public class Toggle {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    /**
+     * Evaluates the toggle against the provided context.
+     * Implements "The Cascade": first matching rule wins, otherwise returns default.
+     */
+    public String evaluate(Map<String, String> context) {
+        if (rules != null) {
+            // Ensure rules are evaluated in priority order
+            List<ToggleRuleDefinition> sortedRules = rules.stream()
+                .sorted(java.util.Comparator.comparingInt(ToggleRuleDefinition::priority))
+                .toList();
+            
+            for (ToggleRuleDefinition rule : sortedRules) {
+                if (rule.matches(this.key, context)) {
+                    return rule.result();
+                }
+            }
+        }
+        return defaultValue;
+    }
 
     /**
      * Constructor for creation from domain, allowing DB-generated ID.

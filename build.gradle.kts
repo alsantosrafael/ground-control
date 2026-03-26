@@ -47,6 +47,8 @@ dependencies {
 	implementation("com.github.ben-manes.caffeine:caffeine")
 
 	// gRPC
+	implementation("jakarta.annotation:jakarta.annotation-api:3.0.0")
+	implementation("javax.annotation:javax.annotation-api:1.3.2")
 	implementation("net.devh:grpc-server-spring-boot-starter:$grpcStarterVersion")
 	implementation("io.grpc:grpc-protobuf:$grpcVersion")
 	implementation("io.grpc:grpc-stub:$grpcVersion")
@@ -55,7 +57,8 @@ dependencies {
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 
-	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-web")
 	testImplementation("org.springframework.modulith:spring-modulith-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

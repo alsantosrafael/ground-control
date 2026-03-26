@@ -27,13 +27,13 @@
 
 ### T1: Caffeine Cache Configuration
 - **What**: Configure `CaffeineCacheManager` in the `toggles` module.
-- **Where**: `com.product.ground_control.toggles.infrastructure.CacheConfig`.
+- **Where**: `com.product.ground_control.toggles.application.configuration.CacheConfig`.
 - **Requirements**: `EDGE-01`.
 - **Done when**: Cache bean is available in the application context.
 
 ### T2: CachedToggleService Implementation
 - **What**: Create a service that combines `ToggleEvaluator` with the Caffeine cache.
-- **Where**: `com.product.ground_control.toggles.application.CachedToggleService`.
+- **Where**: `com.product.ground_control.toggles.application.services.ToggleService`.
 - **Requirements**: `EDGE-01`.
 - **Done when**: Evaluations return from cache on subsequent calls.
 

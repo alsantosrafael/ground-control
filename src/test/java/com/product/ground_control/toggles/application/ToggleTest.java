@@ -2,11 +2,12 @@ package com.product.ground_control.toggles.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.product.ground_control.toggles.domain.FeatureFlag;
+import com.product.ground_control.toggles.application.services.ToggleHasher;
 import com.product.ground_control.toggles.domain.FeatureType;
 import com.product.ground_control.toggles.domain.model.Operator;
 import com.product.ground_control.toggles.domain.model.ToggleRuleCondition;
 import com.product.ground_control.toggles.domain.model.ToggleRuleDefinition;
+import com.product.ground_control.toggles.domain.entity.Toggle;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -15,13 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-class ToggleEvaluatorTest {
-
-    private final ToggleEvaluator evaluator = new ToggleEvaluator();
+class ToggleTest {
 
     @Test
     void shouldReturnDefaultValueWhenNoRulesMatch() {
-        var feature = new FeatureFlag(
+        var toggle = new Toggle(
             UUID.randomUUID(),
             "test_feature",
             FeatureType.BOOLEAN,
@@ -31,7 +30,7 @@ class ToggleEvaluatorTest {
             LocalDateTime.now()
         );
 
-        String result = evaluator.evaluate(feature, Map.of());
+        String result = toggle.evaluate(Map.of());
 
         assertEquals("false", result);
     }
@@ -53,7 +52,7 @@ class ToggleEvaluatorTest {
             null
         );
 
-        var feature = new FeatureFlag(
+        var toggle = new Toggle(
             UUID.randomUUID(),
             "test_feature",
             FeatureType.BOOLEAN,
@@ -63,8 +62,8 @@ class ToggleEvaluatorTest {
             LocalDateTime.now()
         );
 
-        assertEquals("true_from_br", evaluator.evaluate(feature, Map.of("region", "BR", "tier", "VIP")));
-        assertEquals("true_from_vip", evaluator.evaluate(feature, Map.of("region", "US", "tier", "VIP")));
+        assertEquals("true_from_br", toggle.evaluate(Map.of("region", "BR", "tier", "VIP")));
+        assertEquals("true_from_vip", toggle.evaluate(Map.of("region", "US", "tier", "VIP")));
     }
 
     @Test
@@ -78,7 +77,7 @@ class ToggleEvaluatorTest {
             10.0
         );
 
-        var feature = new FeatureFlag(
+        var toggle = new Toggle(
             null,
             "rollout_feature",
             FeatureType.BOOLEAN,
@@ -99,8 +98,8 @@ class ToggleEvaluatorTest {
             if (userIn != null && userOut != null) break;
         }
 
-        assertEquals("enabled", evaluator.evaluate(feature, Map.of("userId", userIn)));
-        assertEquals("disabled", evaluator.evaluate(feature, Map.of("userId", userOut)));
+        assertEquals("enabled", toggle.evaluate(Map.of("userId", userIn)));
+        assertEquals("disabled", toggle.evaluate(Map.of("userId", userOut)));
     }
 
     @Test
@@ -114,7 +113,7 @@ class ToggleEvaluatorTest {
             50.0
         );
 
-        var feature = new FeatureFlag(
+        var toggle = new Toggle(
             null,
             "targeted_rollout",
             FeatureType.BOOLEAN,
@@ -136,11 +135,11 @@ class ToggleEvaluatorTest {
         }
 
         // VIP users match targeting, but follow distribution
-        assertEquals("enabled", evaluator.evaluate(feature, Map.of("tier", "VIP", "userId", vipIn)));
-        assertEquals("disabled", evaluator.evaluate(feature, Map.of("tier", "VIP", "userId", vipOut)));
+        assertEquals("enabled", toggle.evaluate(Map.of("tier", "VIP", "userId", vipIn)));
+        assertEquals("disabled", toggle.evaluate(Map.of("tier", "VIP", "userId", vipOut)));
 
         // Non-VIP users don't even get to distribution, they fail targeting
-        assertEquals("disabled", evaluator.evaluate(feature, Map.of("tier", "BASIC", "userId", vipIn)));
+        assertEquals("disabled", toggle.evaluate(Map.of("tier", "BASIC", "userId", vipIn)));
     }
 
     @Test
@@ -153,7 +152,7 @@ class ToggleEvaluatorTest {
             null
         );
 
-        var feature = new FeatureFlag(
+        var toggle = new Toggle(
             UUID.randomUUID(),
             "percentage_toggle",
             FeatureType.PERCENTAGE,
@@ -163,8 +162,8 @@ class ToggleEvaluatorTest {
             LocalDateTime.now()
         );
 
-        assertEquals("75.5", evaluator.evaluate(feature, Map.of("region", "US")));
-        assertEquals("10.0", evaluator.evaluate(feature, Map.of("region", "BR")));
+        assertEquals("75.5", toggle.evaluate(Map.of("region", "US")));
+        assertEquals("10.0", toggle.evaluate(Map.of("region", "BR")));
     }
 
     @Test
@@ -178,7 +177,7 @@ class ToggleEvaluatorTest {
             50.0
         );
 
-        var feature = new FeatureFlag(
+        var toggle = new Toggle(
             null,
             "missing_subject_feature",
             FeatureType.BOOLEAN,
@@ -189,7 +188,7 @@ class ToggleEvaluatorTest {
         );
 
         // Context is missing 'userId' -> Rule cannot be evaluated -> Falls back to defaultValue
-        assertEquals("fallback_default", evaluator.evaluate(feature, Map.of("other_prop", "value")));
+        assertEquals("fallback_default", toggle.evaluate(Map.of("other_prop", "value")));
     }
 
     @Test
@@ -203,7 +202,7 @@ class ToggleEvaluatorTest {
             null
         );
 
-        var feature = new FeatureFlag(
+        var toggle = new Toggle(
             null,
             "no_dist_feature",
             FeatureType.BOOLEAN,
@@ -213,8 +212,8 @@ class ToggleEvaluatorTest {
             LocalDateTime.now()
         );
 
-        assertEquals("rule_result", evaluator.evaluate(feature, Map.of("region", "US")));
-        assertEquals("fallback_default", evaluator.evaluate(feature, Map.of("region", "BR")));
+        assertEquals("rule_result", toggle.evaluate(Map.of("region", "US")));
+        assertEquals("fallback_default", toggle.evaluate(Map.of("region", "BR")));
     }
 
     @ParameterizedTest

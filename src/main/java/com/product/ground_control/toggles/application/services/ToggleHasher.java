@@ -1,4 +1,4 @@
-package com.product.ground_control.toggles.application;
+package com.product.ground_control.toggles.application.services;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

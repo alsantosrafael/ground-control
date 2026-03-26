@@ -1,6 +1,6 @@
 package com.product.ground_control.toggles.domain.model;
 
-import com.product.ground_control.toggles.application.ToggleHasher;
+import com.product.ground_control.toggles.application.services.ToggleHasher;
 import java.util.List;
 import java.util.Map;
 

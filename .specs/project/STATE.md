@@ -26,6 +26,16 @@
 **Reason:** Ensures high-throughput evaluation and precision required for 0.1% rollouts.
 **Impact:** Production-grade performance for hot paths.
 
+### AD-004: Unified Evaluation Service (2026-03-26)
+**Decision:** Maintain `ToggleService` as the unified entry point for all evaluation requests (REST, gRPC, Internal).
+**Reason:** Consistency and simplicity. Avoids prefixing with "Cached" as caching is an implementation detail of the service.
+**Impact:** Cleaner API surface and predictable service naming.
+
+### AD-005: Infrastructure-Level Caching (Updated 2026-03-26)
+**Decision:** Implement caching as a decorator/implementation detail of `FeatureFlagRepository` (`JpaFeatureFlagRepository`).
+**Reason:** Aligns with DDD by keeping the domain repository interface pure and hiding infrastructure optimizations (Caffeine) behind the abstraction.
+**Impact:** Domain and Application layers remain unaware of caching, improving testability and separation of concerns.
+
 ---
 
 ## Milestone Status
@@ -33,8 +43,8 @@
 | Milestone | Goal | Status |
 | --------- | ---- | ------ |
 | 1. The Engine | Working Rule Engine & Foundation | ✅ Complete |
-| 2. High-Performance Edge | Caffeine & gRPC | ⏳ Next |
-| 3. The Data Pulse | Event Ingestion | ⏳ Planned |
+| 2. High-Performance Edge | Caffeine & gRPC | ✅ Complete |
+| 3. The Data Pulse | Event Ingestion | ⏳ Next |
 | 4. The Control Plane | Management API | ⏳ Planned |
 | 5. Production Ready | GraalVM & Load Testing | ⏳ Planned |
 
