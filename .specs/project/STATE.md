@@ -8,12 +8,11 @@
 ## Recent Decisions (Last 60 days)
 
 ### AD-001: Rule Engine Design (Updated 2026-03-26)
-**Decision:** Use a Two-Stage Prioritized Cascade.
-1. **Targeting Stage:** Evaluate boolean conditions against context properties (e.g., `region == 'US'`).
-2. **Distribution Stage:** Apply deterministic rollout percentage based on a `subject` (e.g., `userId`).
-**Core Principle:** Distribution != FlagValueEvaluation. Distribution is a gate within a rule, not a replacement for targeting.
-**Reason:** Allows for complex rollouts like "10% of VIP users get the new UI" without mixing comparison logic with hashing logic.
-**Impact:** Clearer domain model, better observability into why a flag was or wasn't enabled.
+**Decision:** Use a Two-Stage Prioritized Cascade implemented in `FeatureFlag`.
+1. **Targeting Stage:** Evaluate boolean conditions via `ToggleRuleCondition` against context properties (e.g., `region == 'US'`).
+2. **Distribution Stage:** Apply deterministic rollout percentage (`rolloutPercentage`) based on a `subject` (e.g., `userId`) via `ToggleRuleDefinition`.
+**Core Principle:** Distribution != FlagValueEvaluation.
+**Impact:** Clearer domain model, support for targeted canary rollouts.
 
 ### AD-002: Persistence Strategy (2026-03-26)
 **Decision:** Store rules as JSONB in PostgreSQL.
@@ -22,9 +21,10 @@
 **Impact:** Simplifies the database schema and native-image compilation.
 
 ### AD-003: Deterministic Rollout (Updated 2026-03-26)
-**Decision:** Use SHA-256 for consistent hashing with `double` precision [0.0, 100.0).
-**Reason:** `String.hashCode` lacks the uniformity required for precise decimal rollouts (e.g., 0.5%). SHA-256 ensures a "truly correct" distribution.
-**Impact:** Support for high-precision canary rollouts.
+**Decision:** Use SHA-256 for consistent hashing with `double` precision [0.0, 100.0) via `ToggleHasher`.
+**Performance Optimization:** Use `ThreadLocal<MessageDigest>` to reuse hashers and static `ObjectMapper` in `ToggleRuleListConverter`.
+**Reason:** Ensures high-throughput evaluation and precision required for 0.1% rollouts.
+**Impact:** Production-grade performance for hot paths.
 
 ---
 

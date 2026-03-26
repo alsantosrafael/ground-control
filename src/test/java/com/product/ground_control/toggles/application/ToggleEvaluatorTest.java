@@ -167,6 +167,56 @@ class ToggleEvaluatorTest {
         assertEquals("10.0", evaluator.evaluate(feature, Map.of("region", "BR")));
     }
 
+    @Test
+    void shouldReturnDefaultValueWhenSubjectIsMissingInContext() {
+        // Rule requires 'userId' for 50% rollout
+        var rule = new ToggleRuleDefinition(
+            1,
+            List.of(),
+            "enabled",
+            "userId",
+            50.0
+        );
+
+        var feature = new FeatureFlag(
+            null,
+            "missing_subject_feature",
+            FeatureType.BOOLEAN,
+            List.of(rule),
+            "fallback_default",
+            LocalDateTime.now(),
+            LocalDateTime.now()
+        );
+
+        // Context is missing 'userId' -> Rule cannot be evaluated -> Falls back to defaultValue
+        assertEquals("fallback_default", evaluator.evaluate(feature, Map.of("other_prop", "value")));
+    }
+
+    @Test
+    void shouldReturnRuleResultWhenNoDistributionIsDefined() {
+        // Rule with NO subject/rollout matches 100% of targeted users
+        var rule = new ToggleRuleDefinition(
+            1,
+            List.of(new ToggleRuleCondition("region", Operator.EQUALS, "US")),
+            "rule_result",
+            null,
+            null
+        );
+
+        var feature = new FeatureFlag(
+            null,
+            "no_dist_feature",
+            FeatureType.BOOLEAN,
+            List.of(rule),
+            "fallback_default",
+            LocalDateTime.now(),
+            LocalDateTime.now()
+        );
+
+        assertEquals("rule_result", evaluator.evaluate(feature, Map.of("region", "US")));
+        assertEquals("fallback_default", evaluator.evaluate(feature, Map.of("region", "BR")));
+    }
+
     @ParameterizedTest
     @CsvSource({
         "GREATER_THAN, 20, 18, true",

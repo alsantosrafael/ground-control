@@ -8,7 +8,7 @@
 | Epic/Ticket     | GC-CORE-001                                |
 | Status          | Draft                                      |
 | Created         | 2026-03-25                                 |
-| Last Updated    | 2026-03-25                                 |
+| Last Updated    | 2026-03-26                                 |
 
 ---
 
@@ -39,11 +39,11 @@ Feature Management, Experimentation, and Real-time Analytics.
 ## 3. Scope
 
 ### ✅ In Scope (V1 - Atomic MVP)
-- **Dynamic Rules Engine**: Support for Booleans, Strings, and JSON-based configuration.
+- **Dynamic Rules Engine**: Support for Booleans, Strings, JSON, and PERCENTAGE configuration.
 - **Context-Aware Evaluation**: Rules based on User Profile (VIP, Tier), Region, and custom attributes.
 - **High-Performance In-Memory Cache**: Sub-5ms evaluation latency.
 - **Event Ingestion**: Basic endpoint for "Data Pulse" analytics events.
-- **Management API (REST)**: Create, update, and list feature rules.
+- **Management API (REST)**: Create, update, and list feature flags.
 - **Dual-Protocol Evaluation Path**: High-speed **gRPC** for SDKs/Agents and **REST** for universal access.
 
 ### ❌ Out of Scope (V1)
@@ -66,7 +66,7 @@ Ground Control uses a **Modular Monolith (Spring Modulith)** architecture, optim
 
 **High-Level Flow**:
 1. **Management** stores rules in **PostgreSQL**.
-2. **Toggles** module caches active rules in **Caffeine (In-Memory)**.
+2. **Toggles** module caches active flags in **Caffeine (In-Memory)**.
 3. **SDK/Agent/Human** requests evaluation via **gRPC (Protobuf)** OR **REST (JSON)**.
 4. **Toggles** evaluates context against a **Prioritized Cascade** of rules.
 5. **Analytics** receives "Data Pulse" events and stores them for later assessment.
@@ -86,13 +86,15 @@ graph LR
 ### Evaluation Logic (The Cascade)
 To ensure "Atomic Enchantment" and deterministic results:
 - **Priority Order**: Rules are evaluated from Priority 1 to N. The first matching rule "wins."
-- **Deterministic Rollout**: Percentage-based rollouts use consistent hashing (`hash(userId + featureKey) % 100`) to ensure a stable user experience without database lookups.
-- **Value Types**: Supports `BOOLEAN`, `STRING`, and `JSON` configuration values.
+- **Two-Stage Evaluation**:
+  1. **Targeting**: Matches `ToggleRuleCondition` (property-based) against context.
+  2. **Distribution**: Applies `rolloutPercentage` based on a `subject` (deterministic SHA-256 hashing).
+- **Value Types**: Supports `BOOLEAN`, `STRING`, `JSON`, and `PERCENTAGE` configuration values.
 
 ### Domain Model (Tactical DDD)
-- **Aggregate Root**: `FeatureRule` (Toggles Module)
-  - `RuleDefinition`: The logic (JSONB).
-  - `RuleContext`: Requirements (Region, Tier, etc.).
+- **Aggregate Root**: `FeatureFlag` (Toggles Module)
+  - `ToggleRuleDefinition`: The logic (Priority, Result, Subject, Rollout).
+  - `ToggleRuleCondition`: Targeting requirements (Property, Operator, Value).
   - `DefaultValue`: The fallback.
 - **Aggregate Root**: `AnalyticsEvent` (Analytics Module)
   - `EventMetadata`: Context of the event.
@@ -102,9 +104,9 @@ To ensure "Atomic Enchantment" and deterministic results:
 
 | Endpoint               | Protocol | Description                     | Request             | Response           |
 | ---------------------- | -------- | ------------------------------- | ------------------- | ------------------ |
-| `/api/v1/rules`        | REST     | Create/Update feature rule      | `RuleDto`           | `RuleDto`          |
-| `/api/v1/rules/eval`   | REST     | Universal Rule Evaluation (JSON)| `EvalRequest`       | `EvalResponse`     |
-| `EvaluationService`    | gRPC     | High-speed Rule Evaluation (Bin)| `EvalRequest`       | `EvalResponse`     |
+| `/api/v1/flags`        | REST     | Create/Update feature flag      | `FlagDto`           | `FlagDto`          |
+| `/api/v1/flags/eval`   | REST     | Universal Flag Evaluation (JSON)| `EvalRequest`       | `EvalResponse`     |
+| `EvaluationService`    | gRPC     | High-speed Flag Evaluation (Bin)| `EvalRequest`       | `EvalResponse`     |
 | `/api/v1/events`       | REST     | Ingest a data pulse event       | `AnalyticsEventDto` | `202 Accepted`     |
 
 ---
@@ -125,7 +127,7 @@ To ensure "Atomic Enchantment" and deterministic results:
 | Phase                 | Task                      | Description                                    | Owner   | Estimate |
 | --------------------- | ------------------------- | ---------------------------------------------- | ------- | -------- |
 | **Phase 1: Foundation** | Project Setup             | Spring Modulith + GraalVM + PostgreSQL config | @rafael | 2d       |
-|                       | Toggles Domain            | `FeatureRule` Aggregate & Rule Engine logic    | @rafael | 5d       |
+|                       | Toggles Domain            | `FeatureFlag` Aggregate & Rule Engine logic    | @rafael | 5d       |
 | **Phase 2: Ingestion** | Analytics Module          | Async event ingestion & storage logic          | @rafael | 4d       |
 | **Phase 3: APIs**     | Management & REST Eval    | REST controllers for CRUD and Evaluation       | @rafael | 4d       |
 | **Phase 4: Optimization**| Caffeine & gRPC Integration| Implementation of the rule cache and gRPC edge | @rafael | 5d       |
@@ -138,19 +140,19 @@ To ensure "Atomic Enchantment" and deterministic results:
   - `assessment.latency`: Target p99 < 5ms.
   - `event.ingest.rate`: Throughput of the pulse endpoint.
   - `cache.hit_rate`: Effectiveness of the rule cache.
-- **Logs**: Structured JSON logging for rule evaluations (Redacted/No PII).
+- **Logs**: Structured JSON logging for flag evaluations (Redacted/No PII).
 
 ---
 
 ## 8. Rollback Plan
-- **Default Fallback**: Every `FeatureRule` MUST have a hard-coded or configuration-based `DefaultValue`.
+- **Default Fallback**: Every `FeatureFlag` MUST have a hard-coded or configuration-based `DefaultValue`.
 - **Engine Failure**: If evaluation fails, the system returns the `DefaultValue` instantly.
 - **Feature Flag (Dogfooding)**: Ground Control will manage its own internal features; revert via its own Management API.
 
 ---
 
 ## 9. Architecture Compliance
-- [ ] Module has dedicated tables (`toggles_rule`, `analytics_event`).
+- [ ] Module has dedicated tables (`toggles`, `analytics_event`).
 - [ ] No cross-module entity imports.
 - [ ] Async communication for Analytics ingestion.
 - [ ] Sub-5ms evaluation path verified.
@@ -165,17 +167,17 @@ This roadmap focuses on delivering "Atomic Enchantment" at each step, moving fro
 ### 🎯 Milestone 1: The Engine (The "Heart")
 **Goal**: A working, testable Rule Engine that supports the "Cascade" and "Deterministic Rollout."
 - [ ] **Setup**: Project structure with `toggles`, `analytics`, and `management` modules.
-- [ ] **Core Logic**: Implementation of the `FeatureRule` aggregate and the `Evaluator` service.
-- [ ] **Feature**: Boolean and String value support.
-- [ ] **Feature**: Percentage-based rollout logic (Deterministic Hashing).
+- [ ] **Core Logic**: Implementation of the `FeatureFlag` aggregate and the `Evaluator` service.
+- [ ] **Feature**: Boolean, String, and Percentage value support.
+- [ ] **Feature**: Two-stage evaluation (Targeting + Distribution).
 - [ ] **Checkpoint**: A unit test suite verifying a complex 3-rule cascade with stable 10% rollout results.
 
 ### 🎯 Milestone 2: High-Performance Edge (The "Speed")
 **Goal**: Moving from DB lookups to sub-5ms in-memory evaluation and binary communication.
-- [ ] **Caffeine**: Integration of the in-memory cache for active rules.
+- [ ] **Caffeine**: Integration of the in-memory cache for active flags.
 - [ ] **gRPC**: Protobuf definitions and the `EvaluationService` implementation.
-- [ ] **REST Eval**: Implementation of the `/api/v1/rules/eval` endpoint for universal access.
-- [ ] **Checkpoint**: A benchmark showing < 5ms latency for rule evaluation via both REST and gRPC.
+- [ ] **REST Eval**: Implementation of the `/api/v1/flags/eval` endpoint for universal access.
+- [ ] **Checkpoint**: A benchmark showing < 5ms latency for flag evaluation via both REST and gRPC.
 
 ### 🎯 Milestone 3: The Data Pulse (The "Gold")
 **Goal**: Connecting the engine to real-world outcomes through event ingestion.
@@ -186,10 +188,10 @@ This roadmap focuses on delivering "Atomic Enchantment" at each step, moving fro
 
 ### 🎯 Milestone 4: The Control Plane (The "UI-Ready")
 **Goal**: A robust API for humans and agents to manage the system.
-- [ ] **Management API**: Full CRUD for `FeatureRule` with validation.
+- [ ] **Management API**: Full CRUD for `FeatureFlag` with validation.
 - [ ] **Context Mapping**: Definition of standard "Context" attributes (Region, VIP, Tier).
 - [ ] **Audit Log**: Basic persistence of who changed what and why.
-- [ ] **Checkpoint**: An Agent can successfully create, update, and then evaluate a rule via the API.
+- [ ] **Checkpoint**: An Agent can successfully create, update, and then evaluate a flag via the API.
 
 ### 🎯 Milestone 5: Production Ready (The "Native")
 **Goal**: A GraalVM-optimized binary ready for high-scale deployment.
