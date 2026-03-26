@@ -143,6 +143,30 @@ class ToggleEvaluatorTest {
         assertEquals("disabled", evaluator.evaluate(feature, Map.of("tier", "BASIC", "userId", vipIn)));
     }
 
+    @Test
+    void shouldHandlePercentageFeatureType() {
+        var rule = new ToggleRuleDefinition(
+            1,
+            List.of(new ToggleRuleCondition("region", Operator.EQUALS, "US")),
+            "75.5",
+            null,
+            null
+        );
+
+        var feature = new FeatureFlag(
+            UUID.randomUUID(),
+            "percentage_toggle",
+            FeatureType.PERCENTAGE,
+            List.of(rule),
+            "10.0",
+            LocalDateTime.now(),
+            LocalDateTime.now()
+        );
+
+        assertEquals("75.5", evaluator.evaluate(feature, Map.of("region", "US")));
+        assertEquals("10.0", evaluator.evaluate(feature, Map.of("region", "BR")));
+    }
+
     @ParameterizedTest
     @CsvSource({
         "GREATER_THAN, 20, 18, true",
