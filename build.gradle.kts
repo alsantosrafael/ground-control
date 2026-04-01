@@ -32,10 +32,12 @@ repositories {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-cache")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
 	implementation("org.springframework.modulith:spring-modulith-starter-core")
+	implementation("org.springframework.modulith:spring-modulith-starter-jpa")
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8")
 
 	// Persistence
@@ -58,8 +60,9 @@ dependencies {
 	annotationProcessor("org.projectlombok:lombok")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
-	testImplementation("org.springframework.boot:spring-boot-starter-web")
+	testImplementation("org.springframework.boot:spring-boot-starter-webmvc")
 	testImplementation("org.springframework.modulith:spring-modulith-starter-test")
+	testImplementation("com.h2database:h2")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
