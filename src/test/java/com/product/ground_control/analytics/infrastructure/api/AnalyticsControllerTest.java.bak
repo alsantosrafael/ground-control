@@ -1,0 +1,136 @@
+package com.product.ground_control.analytics.infrastructure.api;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.product.ground_control.analytics.application.services.EventIngestionService;
+import com.product.ground_control.analytics.application.services.IngestionSource;
+import com.product.ground_control.analytics.infrastructure.api.rest.AnalyticsController;
+import com.product.ground_control.shared.api.EvaluationVariation;
+import com.product.ground_control.shared.api.FeatureKey;
+import com.product.ground_control.shared.api.Metadata;
+import com.product.ground_control.shared.api.Subject;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.Map;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(AnalyticsController.class)
+class AnalyticsControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private EventIngestionService ingestionService;
+
+    @Test
+    void ingest_validRequest_returns202() throws Exception {
+        var body = Map.of(
+            "featureKey", "my-feature",
+            "variation", "true",
+            "subject", "user-123"
+        );
+
+        mockMvc.perform(post("/api/v1/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
+            .andExpect(status().isAccepted());
+
+        ArgumentCaptor<FeatureKey> featureKeyCaptor = ArgumentCaptor.forClass(FeatureKey.class);
+        ArgumentCaptor<EvaluationVariation> variationCaptor = ArgumentCaptor.forClass(EvaluationVariation.class);
+        ArgumentCaptor<Subject> subjectCaptor = ArgumentCaptor.forClass(Subject.class);
+
+        verify(ingestionService).ingest(
+            eq(IngestionSource.REST_API),
+            any(UUID.class),
+            featureKeyCaptor.capture(),
+            variationCaptor.capture(),
+            subjectCaptor.capture(),
+            any(Metadata.class)
+        );
+
+        assertThat(featureKeyCaptor.getValue().getValue()).isEqualTo("my-feature");
+        assertThat(variationCaptor.getValue().getVariant()).isEqualTo("true");
+        assertThat(subjectCaptor.getValue().getIdentifier()).isEqualTo("user-123");
+    }
+
+    @Test
+    void ingest_withIdempotencyKey_usesProvidedKey() throws Exception {
+        UUID clientKey = UUID.randomUUID();
+        var body = Map.of(
+            "featureKey", "my-feature",
+            "variation", "true",
+            "subject", "user-123"
+        );
+
+        mockMvc.perform(post("/api/v1/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Idempotency-Key", clientKey.toString())
+                .content(objectMapper.writeValueAsString(body)))
+            .andExpect(status().isAccepted());
+
+        verify(ingestionService).ingest(
+            eq(IngestionSource.REST_API),
+            eq(clientKey),
+            any(FeatureKey.class),
+            any(EvaluationVariation.class),
+            any(Subject.class),
+            any(Metadata.class)
+        );
+    }
+
+    @Test
+    void ingest_missingFeatureKey_returns400() throws Exception {
+        var body = Map.of(
+            "variation", "true",
+            "subject", "user-123"
+        );
+
+        mockMvc.perform(post("/api/v1/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void ingest_blankVariation_returns400() throws Exception {
+        var body = Map.of(
+            "featureKey", "my-feature",
+            "variation", "   ",
+            "subject", "user-123"
+        );
+
+        mockMvc.perform(post("/api/v1/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void ingest_missingSubject_returns400() throws Exception {
+        var body = Map.of(
+            "featureKey", "my-feature",
+            "variation", "true"
+        );
+
+        mockMvc.perform(post("/api/v1/events")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(body)))
+            .andExpect(status().isBadRequest());
+    }
+}
